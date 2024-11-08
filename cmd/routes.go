@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// Returns the router
 func routes() *http.ServeMux {
 	mux := http.NewServeMux()
 
