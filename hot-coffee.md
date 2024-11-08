@@ -2,6 +2,8 @@
     - manual testing after the completion of the each sub task or general task 
     - task must be done in the order they provided 
 
+    - [x] Routing
+     
     - [ ] Handlers
         - [ ] Order handler
         - [ ] Menu handler
