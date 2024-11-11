@@ -1,16 +1,15 @@
-package handler
+package controller
 
 import (
-	"hot-coffee/internal/core/service"
 	"net/http"
 )
 
 func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		service.InventoryService.GetInventory(w, r)
+		//service.InventoryService.GetInventory(w, r)
 	case http.MethodPost:
-		service.InventoryService.PostInventoryItem(w, r)
+		//service.InventoryService.PostInventoryItem(w, r)
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)

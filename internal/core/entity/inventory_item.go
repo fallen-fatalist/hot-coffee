@@ -1,4 +1,4 @@
-package models
+package entity
 
 type InventoryItem struct {
 	IngredientID string  `json:"ingredient_id"`

@@ -1,4 +1,4 @@
-package models
+package entity
 
 type MenuItem struct {
 	ID          string               `json:"product_id"`
