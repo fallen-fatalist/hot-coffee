@@ -2,15 +2,18 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/services/serviceinstance"
 	"hot-coffee/internal/utils"
+	"log/slog"
 	"net/http"
 )
 
 // Route: /inventory
 func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	switch r.Method {
 	case http.MethodGet:
@@ -51,6 +54,8 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 // Route: /inventory/{id}
 func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
+
 	id := r.PathValue("id")
 	switch r.Method {
 	case http.MethodGet:

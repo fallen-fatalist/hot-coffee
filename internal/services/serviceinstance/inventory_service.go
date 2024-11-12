@@ -11,6 +11,7 @@ import (
 // errors
 var (
 	ErrNegativeQuantity = errors.New("negative quantity of inventory item")
+	ErrZeroValue        = errors.New("zero value of inventory item")
 	ErrIDCollision      = errors.New("id collision between id in request body and id in url")
 )
 
@@ -29,6 +30,8 @@ func NewInventoryService(storage repository.InventoryRepository) *inventoryServi
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {
 	if item.Quantity < 0 {
 		return ErrNegativeQuantity
+	} else if item.Quantity == 0 {
+		item.Quantity = 0
 	}
 	return s.inventoryRepository.Create(item)
 }

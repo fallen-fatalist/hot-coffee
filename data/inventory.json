@@ -28,5 +28,17 @@
       "name": "Sugar",
       "quantity": 5000,
       "unit": "g"
+   },
+   {
+      "ingredient_id": "milk1234657",
+      "name": "Milk",
+      "quantity": 0,
+      "unit": "mlfff"
+   },
+   {
+      "ingredient_id": "milk1234",
+      "name": "Milk",
+      "quantity": -0,
+      "unit": "mlfff"
    }
 ]
