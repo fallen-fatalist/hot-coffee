@@ -15,7 +15,7 @@ var (
 // Initialize services
 func Init() {
 	InventoryService = NewInventoryService(jsonrepository.NewInventoryRepository())
-	// MenuService = NewMenuService()
+	MenuService = NewMenuService(jsonrepository.NewMenuRepository())
 	// OrderService = NewOrderService()
 	slog.Info("Services initialized")
 }

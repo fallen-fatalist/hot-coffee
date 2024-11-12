@@ -8,5 +8,4 @@ type MenuService interface {
 	GetMenuItem(id string) (entities.MenuItem, error)
 	UpdateMenuItem(id string, item entities.MenuItem) error
 	DeleteMenuItem(id string) error
-	GetPopularMenuItems() []entities.MenuItem
 }

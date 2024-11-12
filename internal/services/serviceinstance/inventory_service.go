@@ -11,8 +11,8 @@ import (
 // errors
 var (
 	ErrNegativeQuantity = errors.New("negative quantity of inventory item")
-	ErrEmptyID          = errors.New("empty id provided")
-	ErrEmptyName        = errors.New("empty name provided")
+	ErrEmptyInventoryItemID = errors.New("empty id provided")
+	ErrEmptyInventoryItemName        = errors.New("empty name provided")
 	ErrEmptyUnit        = errors.New("empty unit provided")
 	ErrIDCollision      = errors.New("id collision between id in request body and id in url")
 )
@@ -62,9 +62,9 @@ func (s *inventoryService) DeleteInventoryItem(id string) error {
 
 func validateInventoryItem(item *entities.InventoryItem) error {
 	if item.IngredientID == "" {
-		return ErrEmptyID
+		return ErrEmptyInventoryItemID
 	} else if item.Name == "" {
-		return ErrEmptyName
+		return ErrEmptyInventoryItemName
 	} else if item.Unit == "" {
 		return ErrEmptyUnit
 	} else if item.Quantity == 0 {
