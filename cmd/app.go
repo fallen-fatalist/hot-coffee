@@ -1,17 +1,19 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
 // Main function
 func Run() {
-	// Routes
+	// Router
 	mux := routes()
 
-	log.Print("Listening on port: 4000")
-	err := http.ListenAndServe(":4000", mux)
+	slog.Info("Listening on port: 4000")
+	err := http.ListenAndServe(fmt.Sprintf(":%d", Port), mux)
 	log.Fatal(err)
 
 }

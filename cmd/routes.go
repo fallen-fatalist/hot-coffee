@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	controller "hot-coffee/internal/infrastructure/controller"
+	controller "hot-coffee/internal/controller"
 	"net/http"
 )
 
@@ -17,8 +17,9 @@ func routes() *http.ServeMux {
 	//     GET /orders/{id}: Retrieve a specific order by ID.
 	//     PUT /orders/{id}: Update an existing order.
 	//     DELETE /orders/{id}: Delete an order.
-	//     POST /orders/{id}/close: Close an order.
 	mux.HandleFunc("/orders/{id}", controller.HandleOrder)
+	//     POST /orders/{id}/close: Close an order.
+	mux.HandleFunc("/orders/{id}/close", controller.HandleOrderClose)
 
 	// Inventory:
 	//     POST /inventory: Add a new inventory item.

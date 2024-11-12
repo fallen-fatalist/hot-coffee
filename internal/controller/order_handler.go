@@ -32,3 +32,14 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// Route: /orderds/<id>/close
+func HandleOrderClose(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		//service.OrderService.CloseOrder(w, r)
+	} else {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
