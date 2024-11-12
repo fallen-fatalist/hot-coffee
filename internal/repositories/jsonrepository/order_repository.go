@@ -1,8 +1,8 @@
 package jsonrepository
 
-func initOrderJSONRepository() {
-	return
+type OrderRepository struct {
 }
 
-type OrderRepository struct {
+func NewOrderRepository() *OrderRepository {
+	return nil
 }

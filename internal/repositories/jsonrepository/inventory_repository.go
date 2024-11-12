@@ -3,6 +3,7 @@ package jsonrepository
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/flag"
 	"hot-coffee/internal/utils"
@@ -14,20 +15,20 @@ import (
 
 // Errors
 var (
-	ErrItemDoesntExist       = errors.New("inventory item doesn't exist by provided id")
-	ErrIngridientIDDifferent = errors.New("incorrect ingridient id provided")
-	ErrItemAlreadyExists     = errors.New("item already exists in inventory")
+	ErrInventoryItemDoesntExist   = errors.New("inventory item doesn't exist by provided id")
+	ErrIngridientIDDifferent      = errors.New("incorrect ingridient id provided")
+	ErrInventoryItemAlreadyExists = errors.New("item already exists in inventory")
 )
 
 var (
-	inventoryPath = filepath.Join(flag.StoragePath, "inventory.json")
+	inventoryFilename = filepath.Join(flag.StoragePath, "inventory.json")
 )
 
 // Singleton pattern
 var inventoryRepositoryInstance *inventoryRepository
 
 type inventoryRepository struct {
-	storage map[string]*entities.InventoryItem
+	repository map[string]*entities.InventoryItem
 }
 
 func NewInventoryRepository() *inventoryRepository {
@@ -35,18 +36,18 @@ func NewInventoryRepository() *inventoryRepository {
 		return inventoryRepositoryInstance
 	} else {
 		inventoryRepositoryInstance = &inventoryRepository{
-			storage: make(map[string]*entities.InventoryItem),
+			repository: make(map[string]*entities.InventoryItem),
 		}
 
 		// Open file:
-		inventoryPayload, err := os.ReadFile(inventoryPath)
+		inventoryPayload, err := os.ReadFile(inventoryFilename)
 
 		// File validation
 		if !os.IsNotExist(err) {
 			utils.FatalError("Error while opening inventory JSON file", err)
 			// File does not exist
 		} else if os.IsNotExist(err) {
-			_, err := os.OpenFile(inventoryPath, os.O_CREATE, 0755)
+			_, err := os.OpenFile(inventoryFilename, os.O_CREATE, 0755)
 			utils.FatalError("Error while creating inventory JSON file", err)
 			if err == nil {
 				slog.Debug("Created empty inventory JSON file")
@@ -70,7 +71,7 @@ func (r *inventoryRepository) loadFromJSON(payload []byte) error {
 	}
 
 	for _, item := range items {
-		inventoryRepositoryInstance.storage[item.IngredientID] = &item
+		inventoryRepositoryInstance.repository[item.IngredientID] = &item
 	}
 
 	items = nil
@@ -79,21 +80,21 @@ func (r *inventoryRepository) loadFromJSON(payload []byte) error {
 }
 
 func (r *inventoryRepository) saveToJSON() error {
-	items := make([]*entities.InventoryItem, 0, len(r.storage))
-	for _, item := range r.storage {
+	items := make([]*entities.InventoryItem, 0, len(r.repository))
+	for _, item := range r.repository {
 		items = append(items, item)
 	}
 
 	// Write to JSON file
 	jsonPayload, err := json.MarshalIndent(items, "", "   ")
 	if err != nil {
-		slog.Error("Error while Marshalling inventory items: %s", err)
+		slog.Error(fmt.Sprintf("Error while Marshalling inventory items: %s", err))
 		return err
 	}
 	items = nil
-	err = os.WriteFile(inventoryPath, []byte(jsonPayload), 0755)
+	err = os.WriteFile(inventoryFilename, []byte(jsonPayload), 0755)
 	if err != nil {
-		slog.Error("Error while writing into %s file: %s", inventoryPath, err)
+		slog.Error("Error while writing into %s file: %s", inventoryFilename, err)
 		return err
 	}
 
@@ -101,17 +102,17 @@ func (r *inventoryRepository) saveToJSON() error {
 	return nil
 }
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
-	if _, exists := r.storage[item.IngredientID]; exists {
-		return ErrItemAlreadyExists
+	if _, exists := r.repository[item.IngredientID]; exists {
+		return ErrInventoryItemAlreadyExists
 	}
 
-	r.storage[item.IngredientID] = &item
+	r.repository[item.IngredientID] = &item
 	return r.saveToJSON()
 }
 
 func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
-	items := make([]entities.InventoryItem, 0, len(r.storage))
-	for _, item := range r.storage {
+	items := make([]entities.InventoryItem, 0, len(r.repository))
+	for _, item := range r.repository {
 		items = append(items, *item)
 	}
 
@@ -119,24 +120,24 @@ func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
 }
 
 func (r *inventoryRepository) GetById(id string) (entities.InventoryItem, error) {
-	if item, exists := r.storage[id]; exists {
+	if item, exists := r.repository[id]; exists {
 		return *item, nil
 	}
-	return entities.InventoryItem{}, ErrItemDoesntExist
+	return entities.InventoryItem{}, ErrInventoryItemDoesntExist
 }
 func (r *inventoryRepository) Update(id string, item entities.InventoryItem) error {
-	if _, exists := r.storage[id]; exists {
-		r.storage[id] = &item
+	if _, exists := r.repository[id]; exists {
+		r.repository[id] = &item
 		// Sync with file
 		return r.saveToJSON()
 	}
 
-	return ErrItemDoesntExist
+	return ErrInventoryItemDoesntExist
 }
 func (r *inventoryRepository) Delete(id string) error {
-	if _, exists := r.storage[id]; exists {
-		delete(r.storage, id)
+	if _, exists := r.repository[id]; exists {
+		delete(r.repository, id)
 		return r.saveToJSON()
 	}
-	return ErrItemDoesntExist
+	return ErrInventoryItemDoesntExist
 }

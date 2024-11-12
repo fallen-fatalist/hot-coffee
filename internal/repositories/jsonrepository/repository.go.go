@@ -24,7 +24,7 @@ func Init() {
 	}
 	// Initialize other repositories
 	NewInventoryRepository()
-	initMenuJSONRepository()
-	initOrderJSONRepository()
+	NewMenuRepository()
+	NewOrderRepository()
 	slog.Info("All JSON repositories are initialized")
 }
