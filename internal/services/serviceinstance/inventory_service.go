@@ -11,7 +11,9 @@ import (
 // errors
 var (
 	ErrNegativeQuantity = errors.New("negative quantity of inventory item")
-	ErrZeroValue        = errors.New("zero value of inventory item")
+	ErrEmptyID          = errors.New("empty id provided")
+	ErrEmptyName        = errors.New("empty name provided")
+	ErrEmptyUnit        = errors.New("empty unit provided")
 	ErrIDCollision      = errors.New("id collision between id in request body and id in url")
 )
 
@@ -28,10 +30,8 @@ func NewInventoryService(storage repository.InventoryRepository) *inventoryServi
 }
 
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {
-	if item.Quantity < 0 {
-		return ErrNegativeQuantity
-	} else if item.Quantity == 0 {
-		item.Quantity = 0
+	if err := validateInventoryItem(&item); err != nil {
+		return err
 	}
 	return s.inventoryRepository.Create(item)
 }
@@ -45,10 +45,12 @@ func (s *inventoryService) GetInventoryItem(id string) (entities.InventoryItem, 
 }
 
 func (s *inventoryService) UpdateInventoryItem(id string, item entities.InventoryItem) error {
+	if err := validateInventoryItem(&item); err != nil {
+		return err
+	}
+
 	if id != item.IngredientID {
 		return ErrIDCollision
-	} else if item.Quantity < 0 {
-		return ErrNegativeQuantity
 	}
 
 	return s.inventoryRepository.Update(id, item)
@@ -56,4 +58,17 @@ func (s *inventoryService) UpdateInventoryItem(id string, item entities.Inventor
 
 func (s *inventoryService) DeleteInventoryItem(id string) error {
 	return s.inventoryRepository.Delete(id)
+}
+
+func validateInventoryItem(item *entities.InventoryItem) error {
+	if item.IngredientID == "" {
+		return ErrEmptyID
+	} else if item.Name == "" {
+		return ErrEmptyName
+	} else if item.Unit == "" {
+		return ErrEmptyUnit
+	} else if item.Quantity == 0 {
+		item.Quantity = 0
+	}
+	return nil
 }
