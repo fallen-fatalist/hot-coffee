@@ -1,4 +1,4 @@
-package entity
+package entities
 
 type Order struct {
 	ID           string      `json:"order_id"`
