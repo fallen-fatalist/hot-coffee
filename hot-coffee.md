@@ -13,9 +13,9 @@
         - [ ] Manual testing
 
     - [ ] Menu 
-        - [ ] Menu storage
-        - [ ] Menu service
-        - [ ] Menu handler
+        - [x] Menu storage
+        - [x] Menu service
+        - [x] Menu handler
         - [ ] Manual testing
 
     - [ ] Orders

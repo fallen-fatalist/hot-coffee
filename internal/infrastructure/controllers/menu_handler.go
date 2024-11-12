@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/services/serviceinstance"
 	"hot-coffee/internal/utils"
+	"log/slog"
 	"net/http"
 )
 
@@ -50,11 +52,46 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 // Route: /menu/<id>
 func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
+
+	id := r.PathValue("id")
 	// ID validation
 	switch r.Method {
 	case http.MethodGet:
+		item, err := serviceinstance.MenuService.GetMenuItem(id)
+		if err != nil {
+			utils.JSONErrorRespond(w, err)
+		}
+
+		jsonPayload, err := json.MarshalIndent(item, "", "   ")
+		if err != nil {
+			utils.JSONErrorRespond(w, err)
+			return
+		}
+		w.Write(jsonPayload)
+		return
 	case http.MethodPut:
+		var item entities.MenuItem
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&item)
+		if err != nil {
+			utils.JSONErrorRespond(w, err)
+			return
+		}
+		err = serviceinstance.MenuService.UpdateMenuItem(id, item)
+		if err != nil {
+			utils.JSONErrorRespond(w, err)
+			return
+		}
+		return
 	case http.MethodDelete:
+		err := serviceinstance.MenuService.DeleteMenuItem(id)
+		if err != nil {
+			utils.JSONErrorRespond(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
 	default:
 		w.Header().Set("Allow", "GET, PUT, DELETE")
 		w.WriteHeader(http.StatusMethodNotAllowed)

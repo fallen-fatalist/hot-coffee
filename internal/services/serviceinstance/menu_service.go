@@ -59,7 +59,7 @@ func (s *menuService) DeleteMenuItem(id string) error {
 func validateMenuItem(item entities.MenuItem) error {
 	if item.ID == "" {
 		return ErrEmptyMenuItemID
-	} else if item.Name != "" {
+	} else if item.Name == "" {
 		return ErrEmptyMenuItemName
 	} else if item.Price < 0 {
 		return ErrNegativePrice

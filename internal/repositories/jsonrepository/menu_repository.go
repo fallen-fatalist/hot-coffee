@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/flag"
 	"hot-coffee/internal/utils"
 	"log"
 	"log/slog"
 	"os"
+	"path/filepath"
 )
 
 // Errors
@@ -31,7 +33,7 @@ func NewMenuRepository() *menuRepository {
 	} else {
 		menuRepositoryInstance = &menuRepository{
 			repository:         make(map[string]*entities.MenuItem),
-			repositoryFilename: "menu_items.json",
+			repositoryFilename: filepath.Join(flag.StoragePath, "menu_items.json"),
 		}
 
 		// Open file:
