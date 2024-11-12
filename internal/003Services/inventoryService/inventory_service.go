@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
- 	"hot-coffee/internal/002Repositories"
+	"hot-coffee/internal/002Repositories/repositories"
 	"net/http"
 )
 

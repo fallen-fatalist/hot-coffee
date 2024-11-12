@@ -29,4 +29,5 @@
 /internal/core directory contains the essence of the project, its domain entities and interfaces of the services and repositories.
 /internal/infrastructure directory contains the controllers(handlers), data access layer implementation of repositories and services, data models and mappers between model and entity
 
-
+### Backlog
+    - [ ] Streaming reading

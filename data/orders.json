@@ -1,0 +1,30 @@
+[
+  {
+    "order_id": "order123",
+    "customer_name": "Alice Smith",
+    "items": [
+      {
+        "product_id": "latte",
+        "quantity": 2
+      },
+      {
+        "product_id": "muffin",
+        "quantity": 1
+      }
+    ],
+    "status": "open",
+    "created_at": "2023-10-01T09:00:00Z"
+  },
+  {
+    "order_id": "order124",
+    "customer_name": "Bob Johnson",
+    "items": [
+      {
+        "product_id": "espresso",
+        "quantity": 1
+      }
+    ],
+    "status": "closed",
+    "created_at": "2023-10-01T09:30:00Z"
+  }
+]
