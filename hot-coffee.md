@@ -5,29 +5,40 @@
     - task must be done in the order they provided 
 
     - [x] Routing
-
-    - [ ] Handlers
-        - [ ] Order handler
-        - [ ] Menu handler
-        - [ ] Inventory Handler 
     
-    - [ ] Services
-        - [ ] Order service
-        - [ ] Menu service
-        - [ ] Inventory service 
+    - [ ] Inventory
+        - [x] Inventory storage
+        - [x] Inventory service 
+        - [x] Inventory Handler 
+        - [ ] Manual testing
 
-    - [ ] DAL
-        - [ ] Inventory storage
+    - [ ] Menu 
         - [ ] Menu storage
+        - [ ] Menu service
+        - [ ] Menu handler
+        - [ ] Manual testing
+
+    - [ ] Orders
+        - [ ] Order service
         - [ ] Order storage 
-    
+        - [ ] Order handler
+        - [ ] Manual testing
 
     - [ ] Aggregation functions
     - [ ] Flag
 
-### Small documentation
-/internal/core directory contains the essence of the project, its domain entities and interfaces of the services and repositories.
-/internal/infrastructure directory contains the controllers(handlers), data access layer implementation of repositories and services, data models and mappers between model and entity
+### Project structure
+    - /internal/core contains domain related entities
+    - /internal/repositories contains repository interfaces and implementations
+    - /internal/services contains interfaces of services of the project and its implementations
+    - /internal/infrastructure contains controllers and different handlers not related to service directly
+    - /internal/utils contains utilities used by different packages
+    - /internal/flag contains program argument parsing
 
 ### Backlog
-    - [ ] Streaming reading
+    - [ ] Streaming reading of JSON files
+    - [ ] Unit, integration tests
+    - [ ] Dependency injection
+    - [ ] Logger instance
+    - [ ] Validator
+

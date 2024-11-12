@@ -1,6 +1,6 @@
-package repositories
+package repository
 
-import "hot-coffee/internal/001Domain/entities"
+import "hot-coffee/internal/core/entities"
 
 type OrderRepository interface {
 	Create(order entities.Order) error

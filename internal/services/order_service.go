@@ -1,7 +1,7 @@
 package service
 
 import (
-	"hot-coffee/internal/001Domain/entities"
+	"hot-coffee/internal/core/entities"
 )
 
 type OrderService interface {

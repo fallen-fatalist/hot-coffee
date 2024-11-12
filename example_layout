@@ -1,0 +1,30 @@
+/your-app
+├── /cmd
+│   └── /app
+│       └── main.go               # Entry point of the application
+├── /internal
+│   ├── /core
+│   │   ├── /models               # Core domain models (entities)
+│   │   │   └── order.go          # Order domain entity
+│   │   ├── /dto                  # Data Transfer Objects (optional)
+│   │   │   └── order_dto.go      # DTO for Order
+│   │   ├── /errors               # Custom error types
+│   │   │   └── app_error.go      # Custom application error types
+│   │   ├── /constants            # Application constants (optional)
+│   │   │   └── order_status.go   # Constants like Order Status
+│   │   └── /validation           # Validation logic (optional)
+│   │       └── order_validation.go
+│   ├── /repositories             # Repository layer (interfaces and implementations)
+│   │   ├── /order_repository.go  # Order repository interface
+│   │   ├── /order_repo_impl.go   # In-memory or DB repository implementation
+│   │   └── /order_repo_mock.go   # Mock repository for testing (optional)
+│   ├── /services                 # Business logic layer
+│   │   └── order_service.go      # Order service (uses the repository)
+│   ├── /infrastructure          # Infrastructure layer (database, external services, etc.)
+│   │   ├── /database             # DB connection and setup
+│   │   │   └── db.go             # Database connection setup (e.g., using GORM or SQL)
+│   │   ├── /http                 # HTTP server and handlers
+│   │   │   └── order_handler.go  # HTTP handlers for orders (e.g., REST API)
+│   │   └── /config               # Configuration files (e.g., environment variables)
+│   │       └── config.go         # Configuration loading (DB, Redis, etc.)
+

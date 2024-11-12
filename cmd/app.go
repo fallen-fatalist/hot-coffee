@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"hot-coffee/internal/002Repositories/jsonrepository"
 	"hot-coffee/internal/flag"
+	"hot-coffee/internal/repositories/jsonrepository"
+	"hot-coffee/internal/services/serviceinstance"
 	"log"
 	"log/slog"
 	"net/http"
@@ -11,8 +12,10 @@ import (
 
 // Main function
 func Run() {
-	// Initialize stroage
+	// Initialize storages
 	jsonrepository.Init()
+	// Initialize services
+	serviceinstance.Init()
 
 	// Router
 	mux := routes()

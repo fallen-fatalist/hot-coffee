@@ -1,6 +1,6 @@
-package repositories
+package repository
 
-import "hot-coffee/internal/001Domain/entities"
+import "hot-coffee/internal/core/entities"
 
 type InventoryRepository interface {
 	Create(item entities.InventoryItem) error

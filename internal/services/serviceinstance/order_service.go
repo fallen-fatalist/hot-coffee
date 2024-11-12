@@ -1,11 +1,6 @@
-package service
+package serviceinstance
 
 import "net/http"
-
-// service variable
-var (
-	OrderService = &orderService{}
-)
 
 type orderService struct {
 	// Repository insertion

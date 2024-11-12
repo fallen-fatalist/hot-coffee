@@ -1,15 +1,13 @@
 package controllers
 
-import (
-	"net/http"
-)
+import "net/http"
 
-func HandleInventory(w http.ResponseWriter, r *http.Request) {
+// Route: /menu
+func HandleMenu(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
-		//service.InventoryService.GetInventory(w, r)
 	case http.MethodPost:
-		//service.InventoryService.PostInventoryItem(w, r)
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -17,7 +15,9 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
+// Route: /menu/<id>
+func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	// ID validation
 	switch r.Method {
 	case http.MethodGet:

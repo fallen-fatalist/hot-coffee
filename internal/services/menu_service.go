@@ -1,6 +1,6 @@
 package service
 
-import "hot-coffee/internal/001Domain/entities"
+import "hot-coffee/internal/core/entities"
 
 type MenuService interface {
 	CreateMenuItem(item entities.MenuItem) error

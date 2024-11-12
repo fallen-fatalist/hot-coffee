@@ -1,6 +1,6 @@
 package service
 
-import "hot-coffee/internal/001Domain/entities"
+import "hot-coffee/internal/core/entities"
 
 type InventoryService interface {
 	CreateInventoryItem(item entities.InventoryItem) error

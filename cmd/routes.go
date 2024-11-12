@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"hot-coffee/internal/004Infrastructure/controllers"
+	"hot-coffee/internal/infrastructure/controllers"
 	"net/http"
 )
 

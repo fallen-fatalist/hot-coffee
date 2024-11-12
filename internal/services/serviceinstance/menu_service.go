@@ -1,11 +1,6 @@
-package service
+package serviceinstance
 
 import "net/http"
-
-// service variable
-var (
-	MenuService = &menuService{}
-)
 
 type menuService struct {
 	// Repository insertion
