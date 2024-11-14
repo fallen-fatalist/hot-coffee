@@ -1,15 +1,17 @@
 package serviceinstance
 
 import (
-	"hot-coffee/internal/repositories/jsonrepository"
 	"log/slog"
+
+	"hot-coffee/internal/repositories/jsonrepository"
+	"hot-coffee/internal/services/service"
 )
 
 // Services instances
 var (
-	InventoryService *inventoryService
-	MenuService      *menuService
-	OrderService     *orderService
+	InventoryService service.InventoryService
+	MenuService      service.MenuService
+	OrderService     service.OrderService
 )
 
 // Initialize services
