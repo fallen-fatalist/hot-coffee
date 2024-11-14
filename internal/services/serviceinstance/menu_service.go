@@ -49,7 +49,7 @@ func (s *menuService) UpdateMenuItem(id string, item entities.MenuItem) error {
 	}
 
 	if id != item.ID {
-		return ErrIDCollision
+		return ErrInventoryItemIDCollision
 	}
 
 	return s.menuRepository.Update(id, item)

@@ -3,11 +3,12 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"net/http"
+
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/services/serviceinstance"
 	"hot-coffee/internal/utils"
-	"log/slog"
-	"net/http"
 )
 
 // Route: /inventory

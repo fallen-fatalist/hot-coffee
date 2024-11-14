@@ -2,19 +2,20 @@ package serviceinstance
 
 import (
 	"errors"
-	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/repositories/repository"
 	"log/slog"
 	"os"
+
+	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/repositories/repository"
 )
 
 // errors
 var (
-	ErrNegativeQuantity = errors.New("negative quantity of inventory item")
-	ErrEmptyInventoryItemID = errors.New("empty id provided")
-	ErrEmptyInventoryItemName        = errors.New("empty name provided")
-	ErrEmptyUnit        = errors.New("empty unit provided")
-	ErrIDCollision      = errors.New("id collision between id in request body and id in url")
+	ErrNegativeQuantity         = errors.New("negative quantity of inventory item")
+	ErrEmptyInventoryItemID     = errors.New("empty id provided")
+	ErrEmptyInventoryItemName   = errors.New("empty name provided")
+	ErrEmptyUnit                = errors.New("empty unit provided")
+	ErrInventoryItemIDCollision = errors.New("id collision between id in request body and id in url")
 )
 
 type inventoryService struct {
@@ -50,7 +51,7 @@ func (s *inventoryService) UpdateInventoryItem(id string, item entities.Inventor
 	}
 
 	if id != item.IngredientID {
-		return ErrIDCollision
+		return ErrInventoryItemIDCollision
 	}
 
 	return s.inventoryRepository.Update(id, item)
