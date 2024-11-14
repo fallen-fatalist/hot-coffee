@@ -2,15 +2,18 @@ package serviceinstance
 
 import (
 	"errors"
+
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repositories/repository"
 )
 
 // Errors
 var (
-	ErrEmptyMenuItemID   = errors.New("empty menu item id provided")
-	ErrEmptyMenuItemName = errors.New("empty menu item name provided")
-	ErrNegativePrice     = errors.New("negative price in menu item provided")
+	ErrEmptyMenuItemID            = errors.New("empty menu item id provided")
+	ErrEmptyMenuItemName          = errors.New("empty menu item name provided")
+	ErrNegativePrice              = errors.New("negative price in menu item provided")
+	ErrNegativeIngridientQuantity = errors.New("ingridient negative quantity provided")
+	ErrZeroIngridientQuantity     = errors.New("ingridient quantity is zero")
 )
 
 type menuService struct {
@@ -66,5 +69,15 @@ func validateMenuItem(item entities.MenuItem) error {
 	} else if item.Price == 0 {
 		item.Price = 0
 	}
+
+	// Ingridients validation
+	for _, ingridient := range item.Ingredients {
+		if ingridient.Quantity < 0 {
+			return ErrNegativeIngridientQuantity
+		} else if ingridient.Quantity == 0 {
+			return ErrZeroIngridientQuantity
+		}
+	}
+
 	return nil
 }
