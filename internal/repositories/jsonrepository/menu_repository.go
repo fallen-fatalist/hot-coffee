@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/flag"
-	"hot-coffee/internal/utils"
 	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/flag"
+	"hot-coffee/internal/utils"
 )
 
 // Errors
@@ -44,7 +45,7 @@ func NewMenuRepository() *menuRepository {
 			utils.FatalError("Error while opening menu JSON file", err)
 			// File does not exist
 		} else if os.IsNotExist(err) {
-			_, err := os.OpenFile(menuRepositoryInstance.repositoryFilename, os.O_CREATE, 0755)
+			_, err := os.OpenFile(menuRepositoryInstance.repositoryFilename, os.O_CREATE, 0o755)
 			utils.FatalError("Error while creating menu JSON file", err)
 			if err == nil {
 				slog.Debug("Created empty menu JSON file")
@@ -88,13 +89,13 @@ func (m *menuRepository) saveToJSON() error {
 		return err
 	}
 	items = nil
-	err = os.WriteFile(m.repositoryFilename, []byte(jsonPayload), 0755)
+	err = os.WriteFile(m.repositoryFilename, []byte(jsonPayload), 0o755)
 	if err != nil {
-		slog.Error("Error while writing into %s file: %s", inventoryFilename, err)
+		slog.Error(fmt.Sprintf("Error while writing into %s file: %s", inventoryFilename, err))
 		return err
 	}
 
-	slog.Info("Inventory repository synced data with JSON file")
+	slog.Info("Menu repository synced data with JSON file")
 	return nil
 }
 
