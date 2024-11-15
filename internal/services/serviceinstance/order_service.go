@@ -10,13 +10,14 @@ import (
 
 // Errors
 var (
-	ErrEmptyCustomerName         = errors.New("empty customer name provided in order")
-	ErrNegativeOrderItemQuantity = errors.New("negative order item quantity provided")
-	ErrZeroOrderItemQuantity     = errors.New("zero order item quantity provided")
-	ErrIncirrectOrderStatus      = errors.New("order status is incorrect")
-	ErrCreatedAtField            = errors.New("created at field is not empty")
-	ErrNoItemsInOrder            = errors.New("order has no items")
-	ErrProductIsNotExist         = errors.New("product provided in order does not exist")
+	ErrEmptyCustomerName           = errors.New("empty customer name provided in order")
+	ErrNegativeOrderItemQuantity   = errors.New("negative order item quantity provided")
+	ErrZeroOrderItemQuantity       = errors.New("zero order item quantity provided")
+	ErrIncirrectOrderStatus        = errors.New("order status is incorrect")
+	ErrCreatedAtField              = errors.New("created at field is not empty")
+	ErrNoItemsInOrder              = errors.New("order has no items")
+	ErrProductIsNotExist           = errors.New("product provided in order does not exist")
+	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 )
 
 type orderService struct {
@@ -31,6 +32,9 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 }
 
 func (s *orderService) CreateOrder(order entities.Order) error {
+	if order.Status == "" {
+		order.Status = "open"
+	}
 	if err := validateOrder(order); err != nil {
 		return err
 	}
@@ -48,6 +52,10 @@ func (s *orderService) GetOrder(id string) (entities.Order, error) {
 func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 	if err := validateOrder(order); err != nil {
 		return err
+	}
+
+	if order.Status == "closed" {
+		return ErrClosedOrderCannotBeModified
 	}
 
 	return s.repository.Update(order.ID, order)
@@ -98,19 +106,26 @@ func validateOrder(order entities.Order) error {
 	return nil
 }
 
-func (o *orderService) GetTotalSales() (int, error) {
-	res := 0
+func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
+	var res float64
 	orders, err := o.GetOrders()
 	if err != nil {
-		return 0, err
+		return entities.TotalSales{}, err
 	}
 
 	for _, order := range orders {
 		if order.Status == "closed" {
-			res++
+			for _, orderItem := range order.Items {
+				menuItem, err := MenuService.GetMenuItem(orderItem.ProductID)
+				if err != nil {
+					return entities.TotalSales{}, err
+				}
+				res += menuItem.Price * float64(orderItem.Quantity)
+			}
 		}
 	}
-	return res, nil
+
+	return entities.TotalSales{Total: res}, nil
 }
 
 // TODO: Refactor and optimize
