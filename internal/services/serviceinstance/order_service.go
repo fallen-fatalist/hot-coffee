@@ -34,9 +34,7 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 }
 
 func (s *orderService) CreateOrder(order entities.Order) error {
-	if order.Status == "" {
-		order.Status = "open"
-	}
+	order.Status = "open"
 	if err := validateOrder(order); err != nil {
 		return err
 	}
@@ -69,10 +67,7 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 	if err != nil {
 		return err
 	}
-
-	if order.Status == "" {
-		order.Status = orderDB.Status
-	}
+	order.Status = orderDB.Status
 
 	if orderDB.Status == "closed" {
 		return ErrClosedOrderCannotBeModified
