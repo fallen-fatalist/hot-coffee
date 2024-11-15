@@ -2,6 +2,7 @@ package serviceinstance
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"hot-coffee/internal/core/entities"
@@ -13,11 +14,12 @@ var (
 	ErrEmptyCustomerName           = errors.New("empty customer name provided in order")
 	ErrNegativeOrderItemQuantity   = errors.New("negative order item quantity provided")
 	ErrZeroOrderItemQuantity       = errors.New("zero order item quantity provided")
-	ErrIncirrectOrderStatus        = errors.New("order status is incorrect")
+	ErrIncorrectOrderStatus        = errors.New("order status is incorrect")
 	ErrCreatedAtField              = errors.New("created at field is not empty")
 	ErrNoItemsInOrder              = errors.New("order has no items")
-	ErrProductIsNotExist           = errors.New("product provided in order does not exist")
+	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
+	ErrNotEnoughIgridient          = errors.New("not enough ingridients")
 )
 
 type orderService struct {
@@ -38,6 +40,11 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 	if err := validateOrder(order); err != nil {
 		return err
 	}
+
+	if err := validateSufficienceOfIngridients(order); err != nil {
+		return err
+	}
+
 	return s.repository.Create(order)
 }
 
@@ -57,6 +64,10 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 	orderDB, err := s.repository.GetById(id)
 	if err != nil {
 		return err
+	}
+
+	if order.Status == "" {
+		order.Status = orderDB.Status
 	}
 
 	if orderDB.Status == "closed" {
@@ -83,7 +94,7 @@ func validateOrder(order entities.Order) error {
 	if order.CustomerName == "" {
 		return ErrEmptyCustomerName
 	} else if order.Status != "open" && order.Status != "closed" {
-		return ErrIncirrectOrderStatus
+		return ErrIncorrectOrderStatus
 	} else if len(order.Items) == 0 {
 		return ErrNoItemsInOrder
 	}
@@ -106,6 +117,44 @@ func validateOrder(order entities.Order) error {
 			return ErrNegativeOrderItemQuantity
 		} else if item.Quantity == 0 {
 			return ErrZeroOrderItemQuantity
+		}
+	}
+	return nil
+}
+
+func validateSufficienceOfIngridients(order entities.Order) error {
+	ingridients := make(map[string]float64)
+	for _, orderItem := range order.Items {
+		menuItem, err := MenuService.GetMenuItem(orderItem.ProductID)
+		if err != nil {
+			return err
+		}
+		for _, ingridient := range menuItem.Ingredients {
+			ingridients[ingridient.IngredientID] += ingridient.Quantity * float64(orderItem.Quantity)
+		}
+	}
+
+	// Ingridients quantity check
+	for ingridientID, quantity := range ingridients {
+		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+		if err != nil {
+			return err
+		}
+
+		if inventoryItem.Quantity < quantity {
+			return fmt.Errorf(ErrNotEnoughIgridient.Error()+": %s", ingridientID)
+		}
+	}
+
+	// deduction after check
+	for ingridientID, quantity := range ingridients {
+		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+		if err != nil {
+			return err
+		}
+		inventoryItem.Quantity -= quantity
+		if err := InventoryService.UpdateInventoryItem(ingridientID, inventoryItem); err != nil {
+			return err
 		}
 	}
 	return nil

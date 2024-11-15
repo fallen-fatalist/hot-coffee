@@ -29,10 +29,12 @@
         - [ ] Manual testing
 
     - [ ] Orders
-        - [ ] Order service
-        - [ ] Order storage 
-        - [ ] Order handler
-        - [ ] Validation
+        - [] Order service
+        - [x] Ingridients sufficiency validation
+        - [x] Ingridients deduction
+        - [x] Order storage 
+        - [x] Order handler
+        - [x] Validation
         - [x] Manual testing
 
     - [ ] Aggregation functions
