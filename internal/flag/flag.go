@@ -22,7 +22,12 @@ func Parse(args []string) (err error) {
 	}
 
 	for flagIdx := 0; flagIdx < len(args); flagIdx += 2 {
-		flagName, flagValue := args[flagIdx], args[flagIdx+1]
+		var flagName, flagValue string
+		if flagIdx+1 < len(args) {
+			flagName, flagValue = args[flagIdx], args[flagIdx+1]
+		}
+
+		flagName = args[flagIdx]
 		switch strings.TrimPrefix(flagName, "--") {
 		case "port":
 			Port, err = strconv.Atoi(flagValue)
@@ -33,6 +38,10 @@ func Parse(args []string) (err error) {
 			}
 		case "dir":
 			StoragePath = flagValue
+		case "endpoints":
+			PrintEndPoints()
+			os.Exit(0)
+
 		default:
 			return fmt.Errorf("unknown flag: %s", flagName)
 		}
@@ -42,14 +51,45 @@ func Parse(args []string) (err error) {
 }
 
 func PrintHelp() {
-	fmt.Println("Simple Storage Service.")
-	fmt.Println("")
-	fmt.Println("**Usage:**")
-	fmt.Println("\ttriple-s [--port <N>] [--dir <S>]")
-	fmt.Println("\ttriple-s --help")
-	fmt.Println("")
-	fmt.Println("**Options:**")
-	fmt.Println("- --help     Show this screen.")
-	fmt.Println("- --port N   Port number")
-	fmt.Println("- --dir S    Path to the directory")
+	fmt.Println(`Coffee Shop Management System
+
+Usage:
+  hot-coffee [--port <N>] [--dir <S>] 
+  hot-coffee --help
+
+Options:
+  --help       Show this screen.
+  --port N     Port number.
+  --dir S      Path to the data directory.`)
+}
+
+func PrintEndPoints() {
+	fmt.Println(`
+    Orders:
+        POST /orders: Create a new order.
+        GET /orders: Retrieve all orders.
+        GET /orders/{id}: Retrieve a specific order by ID.
+        PUT /orders/{id}: Update an existing order.
+        DELETE /orders/{id}: Delete an order.
+        POST /orders/{id}/close: Close an order.
+
+    Menu Items:
+        POST /menu: Add a new menu item.
+        GET /menu: Retrieve all menu items.
+        GET /menu/{id}: Retrieve a specific menu item.
+        PUT /menu/{id}: Update a menu item.
+        DELETE /menu/{id}: Delete a menu item.
+
+    Inventory:
+        POST /inventory: Add a new inventory item.
+        GET /inventory: Retrieve all inventory items.
+        GET /inventory/{id}: Retrieve a specific inventory item.
+        PUT /inventory/{id}: Update an inventory item.
+        DELETE /inventory/{id}: Delete an inventory item.
+
+    Aggregations:
+        GET /reports/total-sales: Get the total sales amount.
+        GET /reports/popular-items: Get a list of popular menu items.
+		GET /reports/open: Get a list of open orders.
+`)
 }
