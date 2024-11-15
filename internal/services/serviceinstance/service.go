@@ -21,6 +21,6 @@ func Init() {
 	InventoryService, err = NewInventoryService(jsonrepository.NewInventoryRepository())
 	utils.FatalError("Error while initializing inventory service", err)
 	MenuService = NewMenuService(jsonrepository.NewMenuRepository())
-	// OrderService = NewOrderService()
+	OrderService = NewOrderService(jsonrepository.NewOrderRepository())
 	slog.Info("Services initialized")
 }

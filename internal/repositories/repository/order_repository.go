@@ -8,5 +8,4 @@ type OrderRepository interface {
 	GetById(id string) (entities.Order, error)
 	Update(id string, order entities.Order) error
 	Delete(id string) error
-	CloseOrder(id string) error
 }
