@@ -75,17 +75,10 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 		return ErrEmptyUnit
 	} else if item.Quantity < 0 {
 		return ErrNegativeInventoryItemQuantity
-<<<<<<< HEAD
 	} else if strings.Contains(item.IngredientID, "/") {
 		return ErrIngridientIDContainsSlash
 	} else if strings.Contains(item.IngredientID, " ") {
 		return ErrIngridientIDContainsSpace
-=======
-	} else if strings.Contains(item.Name, "/") {
-		return ErrInventoryNameContainsSlash
-	} else if strings.Contains(item.Name, " ") {
-		return ErrInventoryNameContainsSpace
->>>>>>> d8e906716f7131c8f97f2d656b41a65f48e73438
 	} else if item.Quantity == 0 {
 		item.Quantity = 0
 	}
