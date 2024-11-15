@@ -226,7 +226,7 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 		highestSales = append(highestSales, itemsSalesCount[0])
 	}
 
-	//fmt.Println(itemSalesCount, highestSales)
+	// fmt.Println(itemSalesCount, highestSales)
 
 	for idx := len(itemSalesCount) - 1; idx >= 1 && itemsSalesCount[idx] == itemsSalesCount[idx-1]; idx-- {
 		highestSales = append(highestSales, itemsSalesCount[idx-1])

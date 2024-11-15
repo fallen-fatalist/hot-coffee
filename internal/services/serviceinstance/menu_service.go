@@ -19,8 +19,8 @@ var (
 	ErrZeroIngridientQuantity     = errors.New("ingridient quantity is zero")
 	ErrIngridientDuplicate        = errors.New("duplicated ingridient provided in inventory item")
 	ErrIngridientIsNotInInventory = errors.New("ingridient is not present in inventory")
-	ErrMenuItemIDContainsSpace = errors.New("menu item id contains space")
-	ErrMenuItemIDContainsSlash = errors.New("menu item id contains slash")
+	ErrMenuItemIDContainsSpace    = errors.New("menu item id contains space")
+	ErrMenuItemIDContainsSlash    = errors.New("menu item id contains slash")
 )
 
 type menuService struct {
@@ -80,7 +80,6 @@ func validateMenuItem(item entities.MenuItem) error {
 	} else if strings.Contains(item.ID, " ") {
 		return ErrMenuItemIDContainsSpace
 	}
-
 
 	ingridientList := make(map[string]bool)
 	inventoryIngridients := make(map[string]bool)

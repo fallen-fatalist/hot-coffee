@@ -2,9 +2,10 @@ package jsonrepository
 
 import (
 	"fmt"
-	"hot-coffee/internal/flag"
 	"log/slog"
 	"os"
+
+	"hot-coffee/internal/flag"
 )
 
 func Init() {
@@ -14,7 +15,7 @@ func Init() {
 		fmt.Printf("Error while opening data path: %s", err)
 		os.Exit(1)
 	} else if os.IsNotExist(err) {
-		err := os.Mkdir(flag.StoragePath, 0755)
+		err := os.Mkdir(flag.StoragePath, 0o755)
 		if err != nil {
 			fmt.Printf("Error while creating data storage: %s", err)
 			os.Exit(1)

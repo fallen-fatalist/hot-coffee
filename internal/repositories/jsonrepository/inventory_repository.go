@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/flag"
-	"hot-coffee/internal/utils"
 	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/flag"
+	"hot-coffee/internal/utils"
 )
 
 // Errors
@@ -99,7 +100,7 @@ func (r *inventoryRepository) saveToJSON() error {
 		return err
 	}
 	items = nil
-	err = os.WriteFile(r.repositoryFileName, []byte(jsonPayload), 0755)
+	err = os.WriteFile(r.repositoryFileName, []byte(jsonPayload), 0o755)
 	if err != nil {
 		slog.Error("Error while writing into %s file: %s", r.repositoryFileName, err)
 		return err
@@ -108,6 +109,7 @@ func (r *inventoryRepository) saveToJSON() error {
 	slog.Info("Inventory repository synced data with JSON file")
 	return nil
 }
+
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
 	if _, exists := r.repository[item.IngredientID]; exists {
 		return ErrInventoryItemAlreadyExists
@@ -132,6 +134,7 @@ func (r *inventoryRepository) GetById(id string) (entities.InventoryItem, error)
 	}
 	return entities.InventoryItem{}, ErrInventoryItemDoesntExist
 }
+
 func (r *inventoryRepository) Update(id string, item entities.InventoryItem) error {
 	if _, exists := r.repository[id]; exists {
 		r.repository[id] = &item
@@ -141,6 +144,7 @@ func (r *inventoryRepository) Update(id string, item entities.InventoryItem) err
 
 	return ErrInventoryItemDoesntExist
 }
+
 func (r *inventoryRepository) Delete(id string) error {
 	if _, exists := r.repository[id]; exists {
 		delete(r.repository, id)

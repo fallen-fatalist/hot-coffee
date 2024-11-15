@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"hot-coffee/internal/infrastructure/controllers"
 	"net/http"
+
+	"hot-coffee/internal/infrastructure/controllers"
 )
 
 // Returns the router
