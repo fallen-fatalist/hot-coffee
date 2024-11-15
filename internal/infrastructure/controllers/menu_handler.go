@@ -14,6 +14,7 @@ import (
 // Route: /menu
 func HandleMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	switch r.Method {
 	case http.MethodGet:
 		items, err := serviceinstance.MenuService.GetMenuItems()
