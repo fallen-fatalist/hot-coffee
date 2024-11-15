@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"strings"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repositories/repository"
@@ -17,6 +18,8 @@ var (
 	ErrEmptyUnit                     = errors.New("empty unit provided")
 	ErrInventoryItemIDCollision      = errors.New("id collision between id in request body and id in url")
 	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
+	ErrIngridientIDContainsSlash     = errors.New("ingridient id contains slash")
+	ErrIngridientIDContainsSpace     = errors.New("ingridient id contains space")
 )
 
 type inventoryService struct {
@@ -72,6 +75,10 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 		return ErrEmptyUnit
 	} else if item.Quantity < 0 {
 		return ErrNegativeInventoryItemQuantity
+	} else if strings.Contains(item.IngredientID, "/") {
+		return ErrIngridientIDContainsSlash
+	} else if strings.Contains(item.IngredientID, " ") {
+		return ErrIngridientIDContainsSpace
 	} else if item.Quantity == 0 {
 		item.Quantity = 0
 	}
