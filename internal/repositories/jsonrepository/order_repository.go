@@ -19,6 +19,7 @@ import (
 // Errors
 var (
 	ErrOrderAlreadyExists = errors.New("order with such id already exists")
+	ErrOrderIsNotExist    = errors.New("order with provided id does not exist")
 	ErrUUIDGeneration     = errors.New("error while uuid generation")
 )
 
@@ -140,7 +141,7 @@ func (o *orderRepository) GetById(id string) (entities.Order, error) {
 	if _, exists := o.repository[id]; exists {
 		return *o.repository[id], nil
 	}
-	return entities.Order{}, ErrMenuItemDoesntExist
+	return entities.Order{}, ErrOrderIsNotExist
 }
 
 func (o *orderRepository) Update(id string, order entities.Order) error {
@@ -150,7 +151,7 @@ func (o *orderRepository) Update(id string, order entities.Order) error {
 		o.repository[id].Status = order.Status
 		return o.saveToJSON()
 	}
-	return ErrMenuItemDoesntExist
+	return ErrOrderIsNotExist
 }
 
 func (o *orderRepository) Delete(id string) error {
@@ -158,5 +159,5 @@ func (o *orderRepository) Delete(id string) error {
 		delete(o.repository, id)
 		return o.saveToJSON()
 	}
-	return ErrMenuItemDoesntExist
+	return ErrOrderIsNotExist
 }

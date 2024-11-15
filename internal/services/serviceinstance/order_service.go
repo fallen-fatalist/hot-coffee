@@ -54,7 +54,12 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 		return err
 	}
 
-	if order.Status == "closed" {
+	orderDB, err := s.repository.GetById(id)
+	if err != nil {
+		return err
+	}
+
+	if orderDB.Status == "closed" {
 		return ErrClosedOrderCannotBeModified
 	}
 
