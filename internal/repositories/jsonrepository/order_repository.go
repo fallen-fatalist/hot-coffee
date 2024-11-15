@@ -49,6 +49,7 @@ func NewOrderRepository() *orderRepository {
 		// File does not exist
 	} else if os.IsNotExist(err) {
 		_, err := os.OpenFile(orderRepositoryInstance.repositoryFilename, os.O_CREATE, 0o755)
+		fillJSONWithArray(orderRepositoryInstance.repositoryFilename)
 		utils.FatalError("Error while creating order JSON file", err)
 		if err == nil {
 			slog.Debug("Created empty menu JSON file")
@@ -92,7 +93,7 @@ func (m *orderRepository) saveToJSON() error {
 	orders = nil
 	err = os.WriteFile(m.repositoryFilename, []byte(jsonPayload), 0o755)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error while writing into %s file: %s", inventoryFilename, err))
+		slog.Error(fmt.Sprintf("Error while writing into %s file: %s", m.repositoryFilename, err))
 		return err
 	}
 

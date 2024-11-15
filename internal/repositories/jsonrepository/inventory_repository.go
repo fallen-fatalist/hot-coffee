@@ -20,15 +20,12 @@ var (
 	ErrInventoryItemAlreadyExists = errors.New("item already exists in inventory")
 )
 
-var (
-	inventoryFilename = filepath.Join(flag.StoragePath, "inventory.json")
-)
-
 // Singleton pattern
 var inventoryRepositoryInstance *inventoryRepository
 
 type inventoryRepository struct {
-	repository map[string]*entities.InventoryItem
+	repository         map[string]*entities.InventoryItem
+	repositoryFileName string
 }
 
 func NewInventoryRepository() *inventoryRepository {
@@ -36,18 +33,20 @@ func NewInventoryRepository() *inventoryRepository {
 		return inventoryRepositoryInstance
 	} else {
 		inventoryRepositoryInstance = &inventoryRepository{
-			repository: make(map[string]*entities.InventoryItem),
+			repository:         make(map[string]*entities.InventoryItem),
+			repositoryFileName: filepath.Join(flag.StoragePath, "inventory.json"),
 		}
 
 		// Open file:
-		inventoryPayload, err := os.ReadFile(inventoryFilename)
+		inventoryPayload, err := os.ReadFile(inventoryRepositoryInstance.repositoryFileName)
 
 		// File validation
 		if !os.IsNotExist(err) {
 			utils.FatalError("Error while opening inventory JSON file", err)
 			// File does not exist
 		} else if os.IsNotExist(err) {
-			_, err := os.OpenFile(inventoryFilename, os.O_CREATE, 0755)
+			_, err := os.OpenFile(inventoryRepositoryInstance.repositoryFileName, os.O_CREATE, 0o755)
+			fillJSONWithArray(inventoryRepositoryInstance.repositoryFileName)
 			utils.FatalError("Error while creating inventory JSON file", err)
 			if err == nil {
 				slog.Debug("Created empty inventory JSON file")
@@ -79,6 +78,14 @@ func (r *inventoryRepository) loadFromJSON(payload []byte) error {
 	return nil
 }
 
+func fillJSONWithArray(fileName string) {
+	err := os.WriteFile(fileName, []byte("[]"), 0o755)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Error while filling %s JSON file: %s", fileName, err))
+		os.Exit(1)
+	}
+}
+
 func (r *inventoryRepository) saveToJSON() error {
 	items := make([]*entities.InventoryItem, 0, len(r.repository))
 	for _, item := range r.repository {
@@ -92,9 +99,9 @@ func (r *inventoryRepository) saveToJSON() error {
 		return err
 	}
 	items = nil
-	err = os.WriteFile(inventoryFilename, []byte(jsonPayload), 0755)
+	err = os.WriteFile(r.repositoryFileName, []byte(jsonPayload), 0755)
 	if err != nil {
-		slog.Error("Error while writing into %s file: %s", inventoryFilename, err)
+		slog.Error("Error while writing into %s file: %s", r.repositoryFileName, err)
 		return err
 	}
 

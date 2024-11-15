@@ -8,10 +8,15 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
 // Main function
 func Run() {
+	err := flag.Parse(os.Args[1:])
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Initialize storages
 	jsonrepository.Init()
 	// Initialize services
@@ -20,8 +25,8 @@ func Run() {
 	// Router
 	mux := routes()
 
-	slog.Info("Listening on port: 4000")
-	err := http.ListenAndServe(fmt.Sprintf(":%d", flag.Port), mux)
+	slog.Info(fmt.Sprintf("Listening on port: %d", flag.Port))
+	err = http.ListenAndServe(fmt.Sprintf(":%d", flag.Port), mux)
 	log.Fatal(err)
 
 }
