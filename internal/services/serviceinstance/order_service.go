@@ -2,6 +2,7 @@ package serviceinstance
 
 import (
 	"errors"
+	"sort"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repositories/repository"
@@ -112,28 +113,51 @@ func (o *orderService) GetTotalSales() (int, error) {
 	return res, nil
 }
 
-func (o *orderService) GetPopularMenuItems() ([]entities.MenuItem, error) {
-	items := make([]entities.MenuItem, 0)
-	// orders, err := o.GetOrders()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// menuItems, err := MenuService.GetMenuItems()
-	// if err != nil {
-	// 	return nil, err
-	// }
+// TODO: Refactor and optimize
+func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
+	orders, err := o.GetOrders()
+	if err != nil {
+		return nil, err
+	}
 
-	// itemSales := make(map[int]int)
-	// for _, order := range orders {
-	// 	if order.Status == "closed" {
-	// 		for _, item := range order.Items {
-	// 			for _, menuItem := range menuItems {
-	// 				if item.ProductID == menuItem.ID {
-	// 					items = append(items, menuItem)
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	return items, nil
+	highestID := ""
+	itemSalesCount := make(map[string]int)
+
+	for _, order := range orders {
+		if order.Status == "closed" {
+			for _, orderItem := range order.Items {
+				itemSalesCount[orderItem.ProductID] += orderItem.Quantity
+				if itemSalesCount[orderItem.ProductID] > itemSalesCount[highestID] {
+					highestID = orderItem.ProductID
+				}
+			}
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	itemsSalesCount := make(entities.MenuItemSalesByCount, 0, len(itemSalesCount))
+	for menuItemID, salesCount := range itemSalesCount {
+		menuItem, err := MenuService.GetMenuItem(menuItemID)
+		if err != nil {
+			return nil, err
+		}
+
+		itemsSalesCount = append(itemsSalesCount, entities.MenuItemSales{
+			ProductID:   menuItemID,
+			ProductName: menuItem.Name,
+			SalesCount:  salesCount,
+		})
+	}
+
+	sort.Sort(itemsSalesCount)
+	highestSales := make([]entities.MenuItemSales, 0)
+	if len(highestSales) > 0 {
+		highestSales = append(highestSales, itemsSalesCount[len(itemsSalesCount)-1])
+	}
+	for idx := len(itemSalesCount) - 1; idx >= 1 && itemsSalesCount[idx] == itemsSalesCount[idx-1]; idx-- {
+		highestSales = append(highestSales, itemsSalesCount[idx-1])
+	}
+	return highestSales, nil
 }

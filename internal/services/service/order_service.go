@@ -12,5 +12,5 @@ type OrderService interface {
 	DeleteOrder(id string) error
 	CloseOrder(id string) error
 	GetTotalSales() (int, error)
-	GetPopularMenuItems() ([]entities.MenuItem, error)
+	GetPopularMenuItems() ([]entities.MenuItemSales, error)
 }
