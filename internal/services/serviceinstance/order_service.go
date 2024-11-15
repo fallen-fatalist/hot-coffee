@@ -167,7 +167,7 @@ func deductInventory(ingridientsCount map[string]float64) error {
 }
 
 func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
-	var res float64
+	var res float64 = 0.0
 	orders, err := o.GetOrders()
 	if err != nil {
 		return entities.TotalSales{}, err
@@ -195,23 +195,16 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 		return nil, err
 	}
 
-	highestID := ""
 	itemSalesCount := make(map[string]int)
 
 	for _, order := range orders {
 		if order.Status == "closed" {
 			for _, orderItem := range order.Items {
 				itemSalesCount[orderItem.ProductID] += orderItem.Quantity
-				if itemSalesCount[orderItem.ProductID] > itemSalesCount[highestID] {
-					highestID = orderItem.ProductID
-				}
 			}
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	itemsSalesCount := make(entities.MenuItemSalesByCount, 0, len(itemSalesCount))
 	for menuItemID, salesCount := range itemSalesCount {
 		menuItem, err := MenuService.GetMenuItem(menuItemID)
@@ -228,9 +221,13 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 
 	sort.Sort(itemsSalesCount)
 	highestSales := make([]entities.MenuItemSales, 0)
-	if len(highestSales) > 0 {
-		highestSales = append(highestSales, itemsSalesCount[len(itemsSalesCount)-1])
+
+	if len(itemSalesCount) > 0 {
+		highestSales = append(highestSales, itemsSalesCount[0])
 	}
+
+	//fmt.Println(itemSalesCount, highestSales)
+
 	for idx := len(itemSalesCount) - 1; idx >= 1 && itemsSalesCount[idx] == itemsSalesCount[idx-1]; idx-- {
 		highestSales = append(highestSales, itemsSalesCount[idx-1])
 	}
