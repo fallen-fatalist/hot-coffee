@@ -11,23 +11,25 @@ import (
 
 // errors
 var (
-	ErrNegativeQuantity         = errors.New("negative quantity of inventory item")
-	ErrEmptyInventoryItemID     = errors.New("empty id provided")
-	ErrEmptyInventoryItemName   = errors.New("empty name provided")
-	ErrEmptyUnit                = errors.New("empty unit provided")
-	ErrInventoryItemIDCollision = errors.New("id collision between id in request body and id in url")
+	ErrNegativeInventoryItemQuantity = errors.New("negative quantity of inventory item")
+	ErrEmptyInventoryItemID          = errors.New("empty id provided")
+	ErrEmptyInventoryItemName        = errors.New("empty name provided")
+	ErrEmptyUnit                     = errors.New("empty unit provided")
+	ErrInventoryItemIDCollision      = errors.New("id collision between id in request body and id in url")
+	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
 )
 
 type inventoryService struct {
 	inventoryRepository repository.InventoryRepository
 }
 
-func NewInventoryService(storage repository.InventoryRepository) *inventoryService {
+func NewInventoryService(storage repository.InventoryRepository) (*inventoryService, error) {
 	if storage == nil {
 		slog.Error("Error while creating Inventory service: Nil pointer repository provided")
 		os.Exit(1)
 	}
-	return &inventoryService{storage}
+
+	return &inventoryService{storage}, nil
 }
 
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {
@@ -68,8 +70,11 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 		return ErrEmptyInventoryItemName
 	} else if item.Unit == "" {
 		return ErrEmptyUnit
+	} else if item.Quantity < 0 {
+		return ErrNegativeInventoryItemQuantity
 	} else if item.Quantity == 0 {
 		item.Quantity = 0
 	}
+
 	return nil
 }
