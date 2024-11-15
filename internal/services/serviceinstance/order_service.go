@@ -61,6 +61,10 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 		return err
 	}
 
+	if err := validateSufficienceOfIngridients(order); err != nil {
+		return err
+	}
+
 	orderDB, err := s.repository.GetById(id)
 	if err != nil {
 		return err
@@ -74,7 +78,7 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 		return ErrClosedOrderCannotBeModified
 	}
 
-	return s.repository.Update(order.ID, order)
+	return s.repository.Update(id, order)
 }
 
 func (s *orderService) DeleteOrder(id string) error {
@@ -147,7 +151,15 @@ func validateSufficienceOfIngridients(order entities.Order) error {
 	}
 
 	// deduction after check
-	for ingridientID, quantity := range ingridients {
+	if err := deductInventory(ingridients); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func deductInventory(ingridientsCount map[string]float64) error {
+	for ingridientID, quantity := range ingridientsCount {
 		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
 		if err != nil {
 			return err
