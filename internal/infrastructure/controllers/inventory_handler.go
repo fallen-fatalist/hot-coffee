@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/repositories/jsonrepository"
 	"hot-coffee/internal/services/serviceinstance"
 	"hot-coffee/internal/utils"
 )
@@ -41,7 +42,12 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 		}
 		err = serviceinstance.InventoryService.CreateInventoryItem(item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrInventoryItemAlreadyExists:
+				statusCode = http.StatusConflict
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -64,6 +70,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		item, err := serviceinstance.InventoryService.GetInventoryItem(id)
 		if err != nil {
 			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(item, "", "   ")

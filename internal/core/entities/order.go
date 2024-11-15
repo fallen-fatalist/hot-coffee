@@ -12,3 +12,7 @@ type OrderItem struct {
 	ProductID string `json:"product_id"`
 	Quantity  int    `json:"quantity"`
 }
+
+type TotalSales struct {
+	Total float64 `json:"total_sales"`
+}
