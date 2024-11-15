@@ -6,10 +6,11 @@
 
     - validation must include: 
     1. Empty value check
-    2. ID collision check 
-    3. Items dudplicate check 
-    4. Negative quantity check 
-    5. Empty items check
+    2. ID divergence check
+    3. ID collision check 
+    4. Items dudplicate check 
+    5. Negative quantity check 
+    6. Empty items check
 
     - [x] Routing
     
@@ -17,26 +18,26 @@
         - [x] Inventory storage
         - [x] Inventory service 
         - [x] Inventory Handler 
-        - [ ] Strong Validation
+        - [x] Validation
         - [ ] Manual testing
 
     - [ ] Menu 
         - [x] Menu storage
         - [x] Menu service
         - [x] Menu handler
-        - [ ] Strong Validation
+        - [x] Validation
         - [ ] Manual testing
 
     - [ ] Orders
         - [ ] Order service
         - [ ] Order storage 
         - [ ] Order handler
-        - [ ] Strong Validation
-        - [ ] Manual testing
+        - [ ] Validation
+        - [x] Manual testing
 
     - [ ] Aggregation functions
     - [ ] Flag
-    - [ ] Reread the project
+    - [ ] Manual testing
 
 
 
