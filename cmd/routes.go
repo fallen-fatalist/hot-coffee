@@ -46,6 +46,7 @@ func routes() *http.ServeMux {
 	//     GET /reports/popular-items: Get a list of popular menu items.
 	mux.HandleFunc("/reports/total-sales", controllers.HandleTotalSales)
 	mux.HandleFunc("/reports/popular-items", controllers.HandlePopularItems)
+	mux.HandleFunc("/reports/open", controllers.HandleOpenOrders)
 
 	return mux
 }

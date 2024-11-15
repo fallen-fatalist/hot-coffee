@@ -46,6 +46,7 @@ func NewMenuRepository() *menuRepository {
 			// File does not exist
 		} else if os.IsNotExist(err) {
 			_, err := os.OpenFile(menuRepositoryInstance.repositoryFilename, os.O_CREATE, 0o755)
+			fillJSONWithArray(menuRepositoryInstance.repositoryFilename)
 			utils.FatalError("Error while creating menu JSON file", err)
 			if err == nil {
 				slog.Debug("Created empty menu JSON file")
@@ -91,7 +92,7 @@ func (m *menuRepository) saveToJSON() error {
 	items = nil
 	err = os.WriteFile(m.repositoryFilename, []byte(jsonPayload), 0o755)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error while writing into %s file: %s", inventoryFilename, err))
+		slog.Error(fmt.Sprintf("Error while writing into %s file: %s", m.repositoryFilename, err))
 		return err
 	}
 
