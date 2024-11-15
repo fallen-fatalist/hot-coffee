@@ -55,14 +55,6 @@ func (s *orderService) GetOrder(id string) (entities.Order, error) {
 }
 
 func (s *orderService) UpdateOrder(id string, order entities.Order) error {
-	if err := validateOrder(order); err != nil {
-		return err
-	}
-
-	if err := validateSufficienceOfIngridients(order); err != nil {
-		return err
-	}
-
 	orderDB, err := s.repository.GetById(id)
 	if err != nil {
 		return err
@@ -71,6 +63,13 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 
 	if orderDB.Status == "closed" {
 		return ErrClosedOrderCannotBeModified
+	}
+	if err := validateOrder(order); err != nil {
+		return err
+	}
+
+	if err := validateSufficienceOfIngridients(order); err != nil {
+		return err
 	}
 
 	return s.repository.Update(id, order)
