@@ -19,9 +19,13 @@ type errorEnveloper struct {
 	Err string `json:"error"`
 }
 
-func JSONErrorRespond(w http.ResponseWriter, err error) {
+func JSONErrorRespond(w http.ResponseWriter, err error, statusCode int) {
 	errJSON := errorEnveloper{err.Error()}
-	w.WriteHeader(http.StatusBadRequest)
+	if statusCode == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(statusCode)
+	}
 	jsonError, err := json.MarshalIndent(errJSON, "", "   ")
 	if err != nil {
 		slog.Error(err.Error())

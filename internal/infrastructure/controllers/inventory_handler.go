@@ -20,13 +20,13 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.InventoryService.GetInventoryItems()
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(items, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -36,15 +36,16 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		err = serviceinstance.InventoryService.CreateInventoryItem(item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+		return
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -62,12 +63,12 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		item, err := serviceinstance.InventoryService.GetInventoryItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
 		}
 
 		jsonPayload, err := json.MarshalIndent(item, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -77,19 +78,19 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		err = serviceinstance.InventoryService.UpdateInventoryItem(id, item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		return
 	case http.MethodDelete:
 		err := serviceinstance.InventoryService.DeleteInventoryItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err)
+			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

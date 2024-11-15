@@ -5,6 +5,7 @@ import (
 
 	"hot-coffee/internal/repositories/jsonrepository"
 	"hot-coffee/internal/services/service"
+	"hot-coffee/internal/utils"
 )
 
 // Services instances
@@ -16,7 +17,9 @@ var (
 
 // Initialize services
 func Init() {
-	InventoryService = NewInventoryService(jsonrepository.NewInventoryRepository())
+	var err error
+	InventoryService, err = NewInventoryService(jsonrepository.NewInventoryRepository())
+	utils.FatalError("Error while initializing inventory service", err)
 	MenuService = NewMenuService(jsonrepository.NewMenuRepository())
 	// OrderService = NewOrderService()
 	slog.Info("Services initialized")

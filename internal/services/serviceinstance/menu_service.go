@@ -2,6 +2,7 @@ package serviceinstance
 
 import (
 	"errors"
+	"fmt"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repositories/repository"
@@ -12,8 +13,11 @@ var (
 	ErrEmptyMenuItemID            = errors.New("empty menu item id provided")
 	ErrEmptyMenuItemName          = errors.New("empty menu item name provided")
 	ErrNegativePrice              = errors.New("negative price in menu item provided")
+	ErrZeroPrice                  = errors.New("zero prince in menu item provided")
 	ErrNegativeIngridientQuantity = errors.New("ingridient negative quantity provided")
 	ErrZeroIngridientQuantity     = errors.New("ingridient quantity is zero")
+	ErrIngridientDuplicate        = errors.New("duplicated ingridient provided in inventory item")
+	ErrIngridientIsNotInInventory = errors.New("ingridient is not present in inventory")
 )
 
 type menuService struct {
@@ -67,17 +71,41 @@ func validateMenuItem(item entities.MenuItem) error {
 	} else if item.Price < 0 {
 		return ErrNegativePrice
 	} else if item.Price == 0 {
-		item.Price = 0
+		return ErrZeroPrice
+	}
+
+	ingridientList := make(map[string]bool)
+	inventoryIngridients := make(map[string]bool)
+
+	// Fill the map
+	inventoryItems, err := InventoryService.GetInventoryItems()
+	if err != nil {
+		return fmt.Errorf("error while getting inventory items: %s", err)
+	}
+	for _, inventoryItem := range inventoryItems {
+		inventoryIngridients[inventoryItem.IngredientID] = true
 	}
 
 	// Ingridients validation
 	for _, ingridient := range item.Ingredients {
+		// Ingridient duplicate check
+		if _, exists := ingridientList[ingridient.IngredientID]; exists {
+			return ErrIngridientDuplicate
+		} else {
+			ingridientList[ingridient.IngredientID] = true
+		}
+
+		// Ingridient presence in inventory check
+		if _, exists := inventoryIngridients[ingridient.IngredientID]; !exists {
+			return ErrIngridientIsNotInInventory
+		}
+
+		// Quantity check
 		if ingridient.Quantity < 0 {
 			return ErrNegativeIngridientQuantity
 		} else if ingridient.Quantity == 0 {
 			return ErrZeroIngridientQuantity
 		}
 	}
-
 	return nil
 }
