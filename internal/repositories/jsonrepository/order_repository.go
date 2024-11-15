@@ -1,16 +1,25 @@
 package jsonrepository
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/flag"
 	"hot-coffee/internal/utils"
+)
+
+// Errors
+var (
+	ErrOrderAlreadyExists = errors.New("order with such id already exists")
+	ErrUUIDGeneration     = errors.New("error while uuid generation")
 )
 
 type orderRepository struct {
@@ -91,11 +100,32 @@ func (m *orderRepository) saveToJSON() error {
 }
 
 func (o *orderRepository) Create(order entities.Order) error {
-	if _, exists := o.repository[order.ID]; exists {
-		return nil
+	order.CreatedAt = time.Now().String()
+	var err error
+	for {
+		order.ID, err = generateOrderID()
+		if err != nil {
+			return err
+		}
+
+		if _, exists := o.repository[order.ID]; !exists {
+			break
+		}
 	}
 	o.repository[order.ID] = &order
 	return o.saveToJSON()
+}
+
+func generateOrderID() (string, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", ErrUUIDGeneration
+	}
+
+	uuid := fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+
+	return "order-" + uuid, nil
 }
 
 func (o *orderRepository) GetAll() ([]entities.Order, error) {
@@ -114,11 +144,10 @@ func (o *orderRepository) GetById(id string) (entities.Order, error) {
 }
 
 func (o *orderRepository) Update(id string, order entities.Order) error {
-	if id != order.ID {
-		
-	}
 	if _, exists := o.repository[id]; exists {
-		o.repository[id] = &order
+		o.repository[id].CustomerName = order.CustomerName
+		o.repository[id].Items = order.Items
+		o.repository[id].Status = order.Status
 		return o.saveToJSON()
 	}
 	return ErrMenuItemDoesntExist
