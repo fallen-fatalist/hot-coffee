@@ -233,3 +233,18 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 	}
 	return highestSales, nil
 }
+
+func (o *orderService) GetOpenOrders() ([]entities.Order, error) {
+	orders, err := o.repository.GetAll()
+	if err != nil {
+		return []entities.Order{}, nil
+	}
+	openOrders := []entities.Order{}
+	for _, order := range orders {
+		if order.Status == "open" {
+			openOrders = append(openOrders, order)
+		}
+	}
+
+	return openOrders, nil
+}

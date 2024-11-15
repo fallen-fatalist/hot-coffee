@@ -113,3 +113,27 @@ func HandleOrderClose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func HandleOpenOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method == "GET" {
+		openOrders, err := serviceinstance.OrderService.GetOpenOrders()
+		if err != nil {
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		jsonPayload, err := json.MarshalIndent(openOrders, "", "   ")
+		if err != nil {
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonPayload)
+		return
+	} else {
+		w.Header().Set("Allow", "GET")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+}
