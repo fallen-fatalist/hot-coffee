@@ -21,13 +21,16 @@ func Parse(args []string) (err error) {
 		}
 	}
 
-	for flagIdx := 0; flagIdx < len(args); flagIdx += 2 {
+	for flagIdx := 0; flagIdx < len(args); {
 		var flagName, flagValue string
 		if flagIdx+1 < len(args) {
 			flagName, flagValue = args[flagIdx], args[flagIdx+1]
+			flagIdx = flagIdx + 2
+		} else {
+			flagName = args[flagIdx]
+			flagIdx = flagIdx + 1
 		}
 
-		flagName = args[flagIdx]
 		switch strings.TrimPrefix(flagName, "--") {
 		case "port":
 			Port, err = strconv.Atoi(flagValue)
