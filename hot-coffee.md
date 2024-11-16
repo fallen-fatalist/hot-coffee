@@ -37,9 +37,9 @@
         - [x] Validation
         - [x] Manual testing
 
-    - [ ] Aggregation functions
-    - [ ] Flag
-    - [ ] Manual testing
+    - [x] Aggregation functions
+    - [x] Flag
+    - [x] Manual testing
 
 
 

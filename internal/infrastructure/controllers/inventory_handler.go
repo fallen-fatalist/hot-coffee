@@ -69,7 +69,12 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		item, err := serviceinstance.InventoryService.GetInventoryItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrInventoryItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 
@@ -90,14 +95,24 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		}
 		err = serviceinstance.InventoryService.UpdateInventoryItem(id, item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrInventoryItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		return
 	case http.MethodDelete:
 		err := serviceinstance.InventoryService.DeleteInventoryItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrInventoryItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
