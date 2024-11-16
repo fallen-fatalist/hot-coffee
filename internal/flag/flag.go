@@ -63,7 +63,9 @@ Usage:
 Options:
   --help       Show this screen.
   --port N     Port number.
-  --dir S      Path to the data directory.`)
+  --dir S      Path to the data directory.
+  --endpoints  Show the api endpoints.
+  `)
 }
 
 func PrintEndPoints() {
@@ -93,6 +95,6 @@ func PrintEndPoints() {
     Aggregations:
         GET /reports/total-sales: Get the total sales amount.
         GET /reports/popular-items: Get a list of popular menu items.
-		GET /reports/open: Get a list of open orders.
+        GET /reports/open: Get a list of open orders.
 `)
 }
