@@ -20,24 +20,24 @@ The system uses a **three-layer architecture**:
 - **Services**: Contain core business logic.
 - **Repositories**: Handle data storage and retrieval from JSON files.
 
-
 ## Requirements
-
-- **Go 1.18+**
-- **JSON Files** for data storage (no database).
+- **Git**
+- **Golang 1.23.2 Compiler**
 
 ## Running the Application
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-name/hot-coffee.git
+   git clone https://github.com/fallen-fatalist/hot-coffee.git
    cd hot-coffee
    ```
 
 2. Run the application:
    ```bash
    go run main.go
+   ```
    or
+   ```
    go build -o <binary name> .
    ./<binary name>
    ```
@@ -54,7 +54,8 @@ go run main.go --help
 ```
 go run main.go --endpoints
 ```
-![image](https://github.com/user-attachments/assets/54315ca3-c786-4c51-b8a8-da3a6b23c26d)
+![Uploading image.png…]()
+
 * To change directory where save data:
 ```
 go run main.go --dir <my-dir>
@@ -116,7 +117,8 @@ hot-coffee/
 ## API Endpoints
 
 - **Orders**:
-  - `GET /orders` - Retrieve all orders. 
+  - `GET /orders` - Retrieve all orders.
+  - `GET /orders/open` - Get open orders
   - `POST /orders` – Create an order.
   - `GET /orders/{id}` – Get an order.
   - `PUT /orders/{id}` – Update an order.
@@ -140,7 +142,7 @@ hot-coffee/
 - **Reports**:
   - `GET /reports/total-sales` – Total sales.
   - `GET /reports/popular-items` – Popular menu items.
-  - `GET /reports/open` - Get open orders
+ 
 
 ## Request/Response Examples:
 * Create Order Request:
@@ -222,7 +224,7 @@ Content-Type: application/json
 
 ## Data Storage
 
-Data is stored in **JSON** files in the `data/` folder:
+Data is stored in **JSON** files (by default in the `data` folder):
 
 - `orders.json` – Stores customer orders.
 - `menu_items.json` – Stores menu items (product, ingredients).
@@ -236,8 +238,7 @@ Data is stored in **JSON** files in the `data/` folder:
 
 - **400 Bad Request** for invalid input.
 - **404 Not Found** when resources are not found.
-- **500 Internal Server Error** for unexpected issues.
+- **500 Internal Server Error** for unexpected server issues.
 
 ## Logging
-
 The application uses Go's `log/slog` package to log significant events and errors.
