@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/repositories/jsonrepository"
 	"hot-coffee/internal/services/serviceinstance"
 	"hot-coffee/internal/utils"
 )
@@ -19,7 +20,8 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.MenuService.GetMenuItems()
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			statusCode := http.StatusBadRequest
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 
@@ -40,7 +42,8 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 		}
 		err = serviceinstance.MenuService.CreateMenuItem(item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			statusCode := http.StatusBadRequest
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -63,7 +66,13 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		item, err := serviceinstance.MenuService.GetMenuItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrMenuItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
+			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(item, "", "   ")
@@ -83,14 +92,24 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 		}
 		err = serviceinstance.MenuService.UpdateMenuItem(id, item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrMenuItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		return
 	case http.MethodDelete:
 		err := serviceinstance.MenuService.DeleteMenuItem(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			statusCode := http.StatusBadRequest
+			switch err {
+			case jsonrepository.ErrMenuItemDoesntExist:
+				statusCode = http.StatusNotFound
+			}
+			utils.JSONErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
