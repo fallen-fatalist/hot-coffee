@@ -14,21 +14,21 @@
 
     - [x] Routing
     
-    - [ ] Inventory
+    - [x] Inventory
         - [x] Inventory storage
         - [x] Inventory service 
         - [x] Inventory Handler 
         - [x] Validation
-        - [ ] Manual testing
+        - [x] Manual testing
 
-    - [ ] Menu 
+    - [x] Menu 
         - [x] Menu storage
         - [x] Menu service
         - [x] Menu handler
         - [x] Validation
-        - [ ] Manual testing
+        - [x] Manual testing
 
-    - [ ] Orders
+    - [x] Orders
         - [] Order service
         - [x] Ingridients sufficiency validation
         - [x] Ingridients deduction
