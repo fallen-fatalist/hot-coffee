@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/d9aed765-2028-4904-b87f-fa5f16229c36)# Hot Coffee - Coffee Shop Management System
+# Hot Coffee - Coffee Shop Management System
 
 ## Overview
 
@@ -20,7 +20,47 @@ The system uses a **three-layer architecture**:
 - **Services**: Contain core business logic.
 - **Repositories**: Handle data storage and retrieval from JSON files.
 
-### Project Structure
+
+## Requirements
+
+- **Go 1.18+**
+- **JSON Files** for data storage (no database).
+
+## Running the Application
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-name/hot-coffee.git
+   cd hot-coffee
+   ```
+
+2. Run the application:
+   ```bash
+   go run main.go
+   or
+   go build -o <binary name> .
+   ./<binary name>
+   ```
+
+## Program variables
+* The application will start a server on the default port (or use `--port` to specify a different one).
+* To get help:  
+```
+go run main.go --help
+```
+![image](https://github.com/user-attachments/assets/72ed27db-1afa-4044-862d-ae867eed22d5)
+
+* To get list of endpoints:
+```
+go run main.go --endpoints
+```
+![image](https://github.com/user-attachments/assets/54315ca3-c786-4c51-b8a8-da3a6b23c26d)
+* To change directory where save data:
+```
+go run main.go --dir <my-dir>
+```
+
+## Project Structure
 
 ```
 hot-coffee/
@@ -102,7 +142,7 @@ hot-coffee/
   - `GET /reports/popular-items` – Popular menu items.
   - `GET /reports/open` - Get open orders
 
-## Examples:
+## Request/Response Examples:
 * Create Order Request:
 ```
 POST /orders
@@ -188,42 +228,7 @@ Data is stored in **JSON** files in the `data/` folder:
 - `menu_items.json` – Stores menu items (product, ingredients).
 - `inventory.json` – Tracks ingredient stock.
 
-## Requirements
 
-- **Go 1.18+**
-- **JSON Files** for data storage (no database).
-
-## Running the Application
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-name/hot-coffee.git
-   cd hot-coffee
-   ```
-
-2. Run the application:
-   ```bash
-   go run main.go
-   or
-   go build -o <binary name> .
-   ./<binary name>
-   ```
-
-The application will start a server on the default port (or use `--port` to specify a different one).
-To get help you can use:  
-```
-go run main.go --help
-```
-![image](https://github.com/user-attachments/assets/36019eb3-542f-4700-914c-a15907c87c52)
-To get list of endpoints:
-```
-go run main.go --endpoints
-```
-![image](https://github.com/user-attachments/assets/8e5d140a-1b3a-4027-853e-9995056ee526)
-To change directory where save data:
-```
-go run main.go --dir <my-dir>
-```
 
 
 
