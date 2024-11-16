@@ -20,7 +20,7 @@ The system uses a **three-layer architecture**:
 - **Services**: Contain core business logic.
 - **Repositories**: Handle data storage and retrieval from JSON files.
 
-## Requirements
+## Dependencies
 - **Git**
 - **Golang 1.23.2 Compiler**
 
