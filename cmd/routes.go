@@ -14,6 +14,8 @@ func routes() *http.ServeMux {
 	//     POST /orders: Create a new order.
 	//     GET /orders: Retrieve all orders.
 	mux.HandleFunc("/orders", controllers.HandleOrders)
+	// 	   POST /orders/open: Retrieve all open orders
+	mux.HandleFunc("/orders/open", controllers.HandleOpenOrders)
 
 	//     GET /orders/{id}: Retrieve a specific order by ID.
 	//     PUT /orders/{id}: Update an existing order.
@@ -47,7 +49,6 @@ func routes() *http.ServeMux {
 	//     GET /reports/popular-items: Get a list of popular menu items.
 	mux.HandleFunc("/reports/total-sales", controllers.HandleTotalSales)
 	mux.HandleFunc("/reports/popular-items", controllers.HandlePopularItems)
-	mux.HandleFunc("/reports/open", controllers.HandleOpenOrders)
 
 	return mux
 }

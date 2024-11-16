@@ -73,6 +73,7 @@ func PrintEndPoints() {
     Orders:
         POST /orders: Create a new order.
         GET /orders: Retrieve all orders.
+        GET /orders/open: Get a list of open orders.
         GET /orders/{id}: Retrieve a specific order by ID.
         PUT /orders/{id}: Update an existing order.
         DELETE /orders/{id}: Delete an order.
@@ -95,6 +96,5 @@ func PrintEndPoints() {
     Aggregations:
         GET /reports/total-sales: Get the total sales amount.
         GET /reports/popular-items: Get a list of popular menu items.
-        GET /reports/open: Get a list of open orders.
 `)
 }
