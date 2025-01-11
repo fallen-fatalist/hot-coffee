@@ -3,7 +3,7 @@ package cmd
 import (
 	"net/http"
 
-	"hot-coffee/internal/infrastructure/controllers"
+	httpserver "hot-coffee/internal/infrastructure/server/http"
 )
 
 // Returns the router
@@ -13,42 +13,42 @@ func routes() *http.ServeMux {
 	// Orders:
 	//     POST /orders: Create a new order.
 	//     GET /orders: Retrieve all orders.
-	mux.HandleFunc("/orders", controllers.HandleOrders)
+	mux.HandleFunc("/orders", httpserver.HandleOrders)
 	// 	   POST /orders/open: Retrieve all open orders
-	mux.HandleFunc("/orders/open", controllers.HandleOpenOrders)
+	mux.HandleFunc("/orders/open", httpserver.HandleOpenOrders)
 
 	//     GET /orders/{id}: Retrieve a specific order by ID.
 	//     PUT /orders/{id}: Update an existing order.
 	//     DELETE /orders/{id}: Delete an order.
-	mux.HandleFunc("/orders/{id}", controllers.HandleOrder)
+	mux.HandleFunc("/orders/{id}", httpserver.HandleOrder)
 	//     POST /orders/{id}/close: Close an order.
-	mux.HandleFunc("/orders/{id}/close", controllers.HandleOrderClose)
+	mux.HandleFunc("/orders/{id}/close", httpserver.HandleOrderClose)
 
 	// Inventory:
 	//     POST /inventory: Add a new inventory item.
 	//     GET /inventory: Retrieve all inventory items.
-	mux.HandleFunc("/inventory", controllers.HandleInventory)
+	mux.HandleFunc("/inventory", httpserver.HandleInventory)
 
 	//     GET /inventory/{id}: Retrieve a specific inventory item.
 	//     PUT /inventory/{id}: Update an inventory item.
 	//     DELETE /inventory/{id}: Delete an inventory item.
-	mux.HandleFunc("/inventory/{id}", controllers.HandleInventoryItem)
+	mux.HandleFunc("/inventory/{id}", httpserver.HandleInventoryItem)
 
 	// Menu Items:
 	//     POST /menu: Add a new menu item.
 	//     GET /menu: Retrieve all menu items.
-	mux.HandleFunc("/menu", controllers.HandleMenu)
+	mux.HandleFunc("/menu", httpserver.HandleMenu)
 
 	//     GET /menu/{id}: Retrieve a specific menu item.
 	//     PUT /menu/{id}: Update a menu item.
 	//     DELETE /menu/{id}: Delete a menu item.
-	mux.HandleFunc("/menu/{id}", controllers.HandleMenuItem)
+	mux.HandleFunc("/menu/{id}", httpserver.HandleMenuItem)
 
 	// Aggregations:
 	//     GET /reports/total-sales: Get the total sales amount.
 	//     GET /reports/popular-items: Get a list of popular menu items.
-	mux.HandleFunc("/reports/total-sales", controllers.HandleTotalSales)
-	mux.HandleFunc("/reports/popular-items", controllers.HandlePopularItems)
+	mux.HandleFunc("/reports/total-sales", httpserver.HandleTotalSales)
+	mux.HandleFunc("/reports/popular-items", httpserver.HandlePopularItems)
 
 	return mux
 }

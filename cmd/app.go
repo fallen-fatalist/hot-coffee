@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"hot-coffee/internal/flag"
-	"hot-coffee/internal/repositories/jsonrepository"
-	"hot-coffee/internal/services/serviceinstance"
+	"hot-coffee/internal/infrastructure/storage/jsonrepository"
+	"hot-coffee/internal/service/serviceinstance"
 )
 
 // Main function
