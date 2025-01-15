@@ -1,4 +1,5 @@
 CREATE TYPE status_type AS ENUM ('accepted', 'rejected');
+CREATE TABLE unit_type AS ENUM ('shots', 'ml', 'g');
 
 CREATE TABLE orders(
     order_id INT PRIMARY KEY,
@@ -13,7 +14,7 @@ CREATE TABLE order_items(
     order_id INT NOT NULL,
     quantity INT NOT NULL,
     customiization_info TEXT NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES orders (order_id),   
+    FOREIGN KEY (order_id) REFERENCES orders (order_id),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) 
 );
 
@@ -58,7 +59,8 @@ CREATE TABLE price_history(
 CREATE TABLE inventory(
     inventory_item_id INT PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    quantity INT NOT NULL
+    quantity INT NOT NULL,
+    unit unit_type NOT NULL
 );
 
 CREATE TABLE inventory_transactions(
