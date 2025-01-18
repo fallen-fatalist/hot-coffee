@@ -1,8 +1,8 @@
 package serviceinstance
 
 import (
-	"hot-coffee/internal/infrastructure/storage"
 	"hot-coffee/internal/infrastructure/storage/jsonrepository"
+	"hot-coffee/internal/repository"
 	"hot-coffee/internal/service"
 	"hot-coffee/internal/utils"
 	"log/slog"
@@ -15,7 +15,7 @@ var (
 	OrderService     service.OrderService
 )
 
-func NewService(repositories *storage.Repository) (*service.Service, error) {
+func NewService(repositories *repository.Repository) (*service.Service, error) {
 	inventoryService, err := NewInventoryService(repositories.Inventory)
 	if err != nil {
 		return nil, err

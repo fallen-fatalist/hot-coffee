@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/infrastructure/storage"
+	"hot-coffee/internal/repository"
 )
 
 // Errors
@@ -23,10 +23,10 @@ var (
 )
 
 type orderService struct {
-	repository storage.OrderRepository
+	repository repository.OrderRepository
 }
 
-func NewOrderService(repository storage.OrderRepository) *orderService {
+func NewOrderService(repository repository.OrderRepository) *orderService {
 	if repository == nil {
 		panic("empty repository provided to order service")
 	}

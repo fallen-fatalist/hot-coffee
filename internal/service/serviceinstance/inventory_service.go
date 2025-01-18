@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/infrastructure/storage"
+	"hot-coffee/internal/repository"
 )
 
 // errors
@@ -23,10 +23,10 @@ var (
 )
 
 type inventoryService struct {
-	inventoryRepository storage.InventoryRepository
+	inventoryRepository repository.InventoryRepository
 }
 
-func NewInventoryService(storage storage.InventoryRepository) (*inventoryService, error) {
+func NewInventoryService(storage repository.InventoryRepository) (*inventoryService, error) {
 	if storage == nil {
 		slog.Error("Error while creating Inventory service: Nil pointer repository provided")
 		os.Exit(1)

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/infrastructure/storage"
+	"hot-coffee/internal/repository"
 )
 
 // Errors
@@ -24,10 +24,10 @@ var (
 )
 
 type menuService struct {
-	menuRepository storage.MenuRepository
+	menuRepository repository.MenuRepository
 }
 
-func NewMenuService(repository storage.MenuRepository) *menuService {
+func NewMenuService(repository repository.MenuRepository) *menuService {
 	if repository == nil {
 		panic("nil repository provided")
 	}

@@ -3,13 +3,13 @@ package jsonrepository
 import (
 	"fmt"
 	"hot-coffee/internal/flag"
-	"hot-coffee/internal/infrastructure/storage"
+	"hot-coffee/internal/repository"
 	"log/slog"
 	"os"
 )
 
-func NewRepository() *storage.Repository {
-	return &storage.Repository{
+func NewRepository() *repository.Repository {
+	return &repository.Repository{
 		Inventory: NewInventoryRepository(),
 		Menu:      NewMenuRepository(),
 		Order:     NewOrderRepository(),

@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import "hot-coffee/internal/core/entities"
 
