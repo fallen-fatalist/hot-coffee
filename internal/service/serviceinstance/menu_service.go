@@ -3,6 +3,8 @@ package serviceinstance
 import (
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 	"strings"
 
 	"hot-coffee/internal/core/entities"
@@ -29,7 +31,8 @@ type menuService struct {
 
 func NewMenuService(repository repository.MenuRepository) *menuService {
 	if repository == nil {
-		panic("nil repository provided")
+		slog.Error("Error while creating Menu service: Nil pointer repository provided")
+		os.Exit(1)
 	}
 	return &menuService{repository}
 }

@@ -26,13 +26,13 @@ type inventoryService struct {
 	inventoryRepository repository.InventoryRepository
 }
 
-func NewInventoryService(storage repository.InventoryRepository) (*inventoryService, error) {
+func NewInventoryService(storage repository.InventoryRepository) *inventoryService {
 	if storage == nil {
 		slog.Error("Error while creating Inventory service: Nil pointer repository provided")
 		os.Exit(1)
 	}
 
-	return &inventoryService{storage}, nil
+	return &inventoryService{storage}
 }
 
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {

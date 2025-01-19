@@ -3,6 +3,8 @@ package serviceinstance
 import (
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 	"sort"
 
 	"hot-coffee/internal/core/entities"
@@ -28,7 +30,8 @@ type orderService struct {
 
 func NewOrderService(repository repository.OrderRepository) *orderService {
 	if repository == nil {
-		panic("empty repository provided to order service")
+		slog.Error("Error while creating Order service: Nil pointer repository provided")
+		os.Exit(1)
 	}
 	return &orderService{repository}
 }

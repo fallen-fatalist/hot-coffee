@@ -16,12 +16,9 @@ var (
 )
 
 func NewService(repositories *repository.Repository) (*service.Service, error) {
-	inventoryService, err := NewInventoryService(repositories.Inventory)
-	if err != nil {
-		return nil, err
-	}
+
 	return &service.Service{
-		InventoryService: inventoryService,
+		InventoryService: NewInventoryService(repositories.Inventory),
 		MenuService:      NewMenuService(repositories.Menu),
 		OrderService:     NewOrderService(repositories.Order),
 	}, nil
