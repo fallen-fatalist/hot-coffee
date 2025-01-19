@@ -16,7 +16,7 @@ var (
 	ErrEmptyMenuItemID            = errors.New("empty menu item id provided")
 	ErrEmptyMenuItemName          = errors.New("empty menu item name provided")
 	ErrNegativePrice              = errors.New("negative price in menu item provided")
-	ErrZeroPrice                  = errors.New("zero prince in menu item provided")
+	ErrZeroPrice                  = errors.New("zero price in menu item provided")
 	ErrNegativeIngridientQuantity = errors.New("ingridient negative quantity provided")
 	ErrZeroIngridientQuantity     = errors.New("ingridient quantity is zero")
 	ErrIngridientDuplicate        = errors.New("duplicated ingridient provided in inventory item")
