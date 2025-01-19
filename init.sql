@@ -39,7 +39,7 @@ CREATE TABLE order_status_history(
 CREATE TABLE order_items(
     menu_item_id INTEGER NOT NULL, 
     order_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
     customization_info TEXT NOT NULL,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
     FOREIGN KEY (order_id) REFERENCES orders (order_id)
@@ -67,7 +67,7 @@ CREATE TABLE price_history(
 CREATE TABLE menu_items_ingredients(
     menu_item_id INTEGER NOT NULL,
     inventory_item_id INTEGER NOT NULL,
-    quantity INT NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
 );
@@ -79,7 +79,7 @@ CREATE TABLE menu_items_ingredients(
 CREATE TABLE inventory(
     inventory_item_id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    quantity INT NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
     unit_id INT NOT NULL,
     created_at TIMESTAMPTZ,
     FOREIGN KEY (unit_id) REFERENCES units (unit_id)
@@ -92,7 +92,7 @@ CREATE TABLE units(
 
 CREATE TABLE inventory_transactions(
     inventory_item_id SERIAL PRIMARY KEY,
-    transaction_quantity INT NOT NULL,
+    transaction_quantity DECIMAL(10, 2) NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL,
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
 );
