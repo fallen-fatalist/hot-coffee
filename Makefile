@@ -9,3 +9,6 @@ up:
 down:
 	docker-compose down --volumes
 
+logs:
+	docker-compose logs
+

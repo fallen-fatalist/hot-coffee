@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"hot-coffee/internal/flag"
-	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
 )
 
@@ -18,8 +17,6 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Initialize storages
-	jsonrepository.Init()
 	// Initialize services
 	serviceinstance.Init()
 
