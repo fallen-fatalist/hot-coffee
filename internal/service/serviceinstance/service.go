@@ -1,7 +1,7 @@
 package serviceinstance
 
 import (
-	"hot-coffee/internal/infrastructure/storage/jsonrepository"
+	"hot-coffee/internal/infrastructure/storage/postgres"
 	"hot-coffee/internal/repository"
 	"hot-coffee/internal/service"
 	"hot-coffee/internal/utils"
@@ -27,7 +27,7 @@ func NewService(repositories *repository.Repository) (*service.Service, error) {
 // Initialize services
 func Init() {
 	var err error
-	serviceInstance, err := NewService(jsonrepository.NewRepository())
+	serviceInstance, err := NewService(postgres.NewRepository())
 	utils.FatalError("Error while initializing inventory service", err)
 	InventoryService = serviceInstance.InventoryService
 	MenuService = serviceInstance.MenuService
