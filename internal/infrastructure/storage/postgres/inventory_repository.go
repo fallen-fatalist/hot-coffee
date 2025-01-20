@@ -149,3 +149,30 @@ func (r *inventoryRepository) Delete(idStr string) error {
 	}
 	return nil
 }
+
+func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) ([]entities.InventoryItem, error) {
+	query := `
+		SELECT item_id, name, price, quantity
+		FROM inventory
+		ORDER BY $1 ASC
+		LIMIT $3 OFFSET $2
+	`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over the rows
+	var items []entities.InventoryItem
+	for rows.Next() {
+		var item entities.InventoryItem
+		if err := rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, nil
+}

@@ -20,6 +20,9 @@ var (
 	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
 	ErrIngridientIDContainsSlash     = errors.New("ingridient id contains slash")
 	ErrIngridientIDContainsSpace     = errors.New("ingridient id contains space")
+	ErrInvalidSortValue              = errors.New("incorrect sort by value provided")
+	ErrNegativePage                  = errors.New("negative page provided")
+	ErrNegativePageSize              = errors.New("negative page size proovided")
 )
 
 type inventoryService struct {
@@ -64,6 +67,19 @@ func (s *inventoryService) UpdateInventoryItem(id string, item entities.Inventor
 
 func (s *inventoryService) DeleteInventoryItem(id string) error {
 	return s.inventoryRepository.Delete(id)
+}
+
+func (s *inventoryService) GetLeftovers(sortBy string, page, pageSize int) ([]entities.InventoryItem, error) {
+	if sortBy != "quantity" && sortBy != "price" {
+		return nil, ErrInvalidSortValue
+	} else if page < 1 {
+		return nil, ErrNegativePage
+	} else if pageSize < 1 {
+		return nil, ErrNegativePage
+	}
+	offset, rowCount := (page-1)*pageSize, pageSize
+
+	return s.inventoryRepository.GetPage(sortBy, offset, rowCount)
 }
 
 func validateInventoryItem(item *entities.InventoryItem) error {

@@ -3,18 +3,17 @@ package jsonrepository
 import (
 	"fmt"
 	"hot-coffee/internal/flag"
-	"hot-coffee/internal/repository"
 	"log/slog"
 	"os"
 )
 
-func NewRepository() *repository.Repository {
-	return &repository.Repository{
-		Inventory: NewInventoryRepository(),
-		Menu:      NewMenuRepository(),
-		Order:     NewOrderRepository(),
-	}
-}
+// func NewRepository() *repository.Repository {
+// 	return &repository.Repository{
+// 		Inventory: NewInventoryRepository(),
+// 		Menu:      NewMenuRepository(),
+// 		Order:     NewOrderRepository(),
+// 	}
+// }
 
 func Init() {
 	// Validate or initalize data path
@@ -32,6 +31,6 @@ func Init() {
 		}
 	}
 	// Initialize other repositories
-	NewRepository()
+	// NewRepository()
 	slog.Info("All JSON repositories are initialized")
 }

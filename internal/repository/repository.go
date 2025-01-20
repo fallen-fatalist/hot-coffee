@@ -8,6 +8,7 @@ type InventoryRepository interface {
 	GetById(id string) (entities.InventoryItem, error)
 	Update(id string, item entities.InventoryItem) error
 	Delete(id string) error
+	GetPage(sortBy string, offset, rowCount int) ([]entities.InventoryItem, error)
 }
 
 type MenuRepository interface {

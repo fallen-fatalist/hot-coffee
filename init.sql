@@ -60,6 +60,7 @@ CREATE TABLE price_history(
 CREATE TABLE inventory(
     inventory_item_id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
     quantity DECIMAL(10,5) NOT NULL,
     unit VARCHAR(20)
 );
@@ -87,12 +88,12 @@ CREATE TABLE inventory_transactions(
 -- TEMPORARY MOCK DATA INSERTS
 
 -- Insert mock inventory data
-INSERT INTO inventory (name, quantity, unit) VALUES
-('Espresso Shot', 500, 'shots'),
-('Milk', 5000, 'ml'),
-('Flour', 10000, 'g'),
-('Blueberries', 2000, 'g'),
-('Sugar', 5000, 'g');
+INSERT INTO inventory (name, price, quantity, unit) VALUES
+('Espresso Shot', 300, 500, 'shots'),
+('Milk', 200, 5000, 'ml'),
+('Flour', 100, 10000, 'g'),
+('Blueberries', 50, 2000, 'g'),
+('Sugar', 10, 5000, 'g');
 
 -- Insert mock customers
 INSERT INTO customers (name, surname, phone) VALUES
