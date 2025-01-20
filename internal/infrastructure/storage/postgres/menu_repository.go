@@ -33,16 +33,49 @@ func NewMenuRepository() *menuRepository {
 }
 
 func (r *menuRepository) Create(item entities.MenuItem) error {
+	// Query to insert a new menu item
 	query := `
         INSERT INTO menu_items (name, description, price) 
         VALUES ($1, $2, $3)
-		`
+        RETURNING menu_item_id
+	`
 
-	args := []interface{}{item.Name, item.Description, item.Price}
-	_, err := r.db.Exec(query, args...)
+	// Use a transaction to ensure atomicity
+	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
+
+	// Insert the menu item and get the generated ID
+	var menuItemID int
+	err = tx.QueryRow(query, item.Name, item.Description, item.Price).Scan(&menuItemID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Query to insert menu item ingredients
+	ingredientQuery := `
+        INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity)
+        VALUES ($1, $2, $3)
+	`
+
+	// Insert each ingredient
+	for _, ingredient := range item.Ingredients {
+		_, err = tx.Exec(ingredientQuery, menuItemID, ingredient.IngredientID, ingredient.Quantity)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return nil
 }
 
@@ -203,24 +236,61 @@ func (r *menuRepository) GetById(idStr string) (entities.MenuItem, error) {
 }
 
 func (r *menuRepository) Update(idStr string, item entities.MenuItem) error {
+	// Convert ID from string to integer
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return ErrNonNumericID
 	}
 
+	// Use a transaction to ensure atomicity
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Update the main menu item
 	query := `
         UPDATE menu_items
-		SET 
-			name = $2, 
-			description = $3, 
-			price = $4
-		WHERE menu_item_id = $1
-		`
-
-	args := []interface{}{id, item.Name, item.Description, item.Price}
-
-	_, err = r.db.Exec(query, args...)
+        SET 
+            name = $2, 
+            description = $3, 
+            price = $4
+        WHERE menu_item_id = $1
+	`
+	_, err = tx.Exec(query, id, item.Name, item.Description, item.Price)
 	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete existing ingredients for the menu item
+	deleteQuery := `
+        DELETE FROM menu_items_ingredients 
+        WHERE menu_item_id = $1
+	`
+	_, err = tx.Exec(deleteQuery, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Insert updated ingredients
+	insertQuery := `
+        INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity)
+        VALUES ($1, $2, $3)
+	`
+	for _, ingredient := range item.Ingredients {
+		_, err = tx.Exec(insertQuery, id, ingredient.IngredientID, ingredient.Quantity)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -233,13 +303,39 @@ func (r *menuRepository) Delete(idStr string) error {
 		return ErrNonNumericID
 	}
 
+	// Use a transaction to ensure atomicity
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Delete existing ingredients for the menu item
+	deleteQuery := `
+        DELETE FROM menu_items_ingredients 
+        WHERE menu_item_id = $1
+	`
+	_, err = tx.Exec(deleteQuery, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// delete from menu items
 	query := `
 		DELETE FROM menu_items
 		WHERE menu_item_id = $1
 	`
 
-	_, err = r.db.Exec(query, id)
+	_, err = tx.Exec(query, id)
 	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
