@@ -31,6 +31,7 @@ type OrderService interface {
 	GetTotalSales() (entities.TotalSales, error)
 	GetPopularMenuItems() ([]entities.MenuItemSales, error)
 	GetOpenOrders() ([]entities.Order, error)
+	GetOrderedItemsByPeriod(period, month string, year int) (entities.OrderedItemsCountByPeriod, error)
 }
 
 type Service struct {

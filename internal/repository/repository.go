@@ -25,6 +25,7 @@ type OrderRepository interface {
 	GetById(id string) (entities.Order, error)
 	Update(id string, order entities.Order) error
 	Delete(id string) error
+	GetClosedOrdersCountByPeriod(period, month string, year int) (map[string]int, error)
 }
 
 type Repository struct {

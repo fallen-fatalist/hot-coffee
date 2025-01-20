@@ -2,10 +2,18 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
+)
+
+// Errors
+var (
+	ErrPeriodTypeInvalid = errors.New("incorrect period type provided")
 )
 
 type orderRepository struct {
@@ -182,4 +190,75 @@ func (r *orderRepository) Update(id string, order entities.Order) error {
 
 func (r *orderRepository) Delete(id string) error {
 	return nil
+}
+
+func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, year int) (map[string]int, error) {
+	var query string
+	var args []interface{}
+	var orderedItemsCount map[string]int = make(map[string]int)
+
+	// If period is 'day'
+	if period == "day" {
+		query = `
+			SELECT 
+				EXTRACT(DAY FROM created_at) AS day, 
+				COUNT(order_id) AS order_count 
+			FROM 
+				orders 
+			WHERE 
+				TO_CHAR(created_at, 'FMMonth') = $1 
+				AND EXTRACT(YEAR FROM created_at) = $2
+				AND status = 'completed'
+			GROUP BY 
+				EXTRACT(DAY FROM created_at)
+			ORDER BY 
+				day;
+		`
+		args = append(args, month, year)
+
+	} else if period == "month" {
+		query = `
+			SELECT 
+  		  	    TO_CHAR(created_at, 'FMMonth') AS month, 
+  		  	    COUNT(order_id) AS order_count 
+  		  	FROM 
+  		  	    orders 
+  		  	WHERE 
+  		  	    EXTRACT(YEAR FROM created_at) = $1
+  		  	    AND status = 'completed'
+  		  	GROUP BY 
+  		  	    TO_CHAR(created_at, 'FMMonth'), EXTRACT(MONTH FROM created_at)
+  		  	ORDER BY 
+  		  	    EXTRACT(MONTH FROM created_at);
+		`
+		args = append(args, year)
+	} else {
+		return orderedItemsCount, ErrPeriodTypeInvalid
+	}
+
+	// Query the database
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return orderedItemsCount, err
+	}
+	defer rows.Close()
+
+	// Scan the result into orderedItemsCount
+	for rows.Next() {
+		var key string
+		var count int
+		if period == "day" {
+			var day int
+			if err := rows.Scan(&day, &count); err != nil {
+				return orderedItemsCount, err
+			}
+			key = fmt.Sprintf("%d", day)
+		} else if period == "month" {
+			if err := rows.Scan(&key, &count); err != nil {
+				return orderedItemsCount, err
+			}
+		}
+		orderedItemsCount[strings.ToLower(key)] = count
+	}
+	return orderedItemsCount, nil
 }

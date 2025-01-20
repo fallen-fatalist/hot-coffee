@@ -17,3 +17,10 @@ type OrderItem struct {
 type TotalSales struct {
 	Total float64 `json:"total_sales"`
 }
+
+type OrderedItemsCountByPeriod struct {
+	Period            string         `json:"period"`
+	Month             string         `json:"month,omitempty"`
+	Year              int            `json:"year,omitempty"`
+	OrderedItemsCount map[string]int `json:"orderedItems"`
+}

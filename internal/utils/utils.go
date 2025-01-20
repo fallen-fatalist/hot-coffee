@@ -32,3 +32,12 @@ func JSONErrorRespond(w http.ResponseWriter, err error, statusCode int) {
 	}
 	w.Write(jsonError)
 }
+
+func In(str string, arr []string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}

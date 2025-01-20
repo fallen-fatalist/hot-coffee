@@ -142,12 +142,14 @@ func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
 	page, err := strconv.Atoi(pageStr)
 	if err != nil && pageStr != "" {
 		utils.JSONErrorRespond(w, ErrNonIntegerPage, http.StatusBadRequest)
+		return
 	}
 
 	pageSizeStr := r.URL.Query().Get("pageSize")
 	pageSize, err := strconv.Atoi(pageSizeStr)
 	if err != nil && pageSizeStr != "" {
 		utils.JSONErrorRespond(w, ErrNonIntegerPageSize, http.StatusBadRequest)
+		return
 	}
 
 	switch r.Method {

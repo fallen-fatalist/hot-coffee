@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"sort"
+	"strings"
+	"time"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repository"
@@ -22,6 +24,10 @@ var (
 	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 	ErrNotEnoughIgridient          = errors.New("not enough ingridients")
+	// OrdersByPeriod errors
+	ErrPeriodDayInvalid   = errors.New("Incorrect period day provided")
+	ErrPeriodTypeInvalid  = errors.New("Incorrect period type provided")
+	ErrPeriodMonthInvalid = errors.New("Incorrect period month provided")
 )
 
 type orderService struct {
@@ -250,4 +256,51 @@ func (o *orderService) GetOpenOrders() ([]entities.Order, error) {
 	}
 
 	return openOrders, nil
+}
+
+var monthCapitalized = map[string]string{
+	"january":   "January",
+	"february":  "February", // Adjust for leap years as needed
+	"march":     "March",
+	"april":     "April",
+	"may":       "May",
+	"june":      "June",
+	"july":      "July",
+	"august":    "August",
+	"september": "September",
+	"october":   "October",
+	"november":  "November",
+	"december":  "December",
+}
+
+func (o *orderService) GetOrderedItemsByPeriod(period, month string, year int) (entities.OrderedItemsCountByPeriod, error) {
+	orderedItemsCountByPeriod := entities.OrderedItemsCountByPeriod{}
+	if period != "month" && period != "day" {
+		return orderedItemsCountByPeriod, ErrPeriodTypeInvalid
+	} else if period == "month" && year == 0 {
+		return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
+	} else if period == "day" && month == "" {
+		return orderedItemsCountByPeriod, ErrPeriodDayInvalid
+	}
+
+	if period == "day" && year == 0 {
+		year = time.Now().Year()
+	}
+
+	var ok bool
+	if month, ok = monthCapitalized[month]; !ok && month != "" {
+		return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
+	}
+
+	itemsCount, err := o.repository.GetClosedOrdersCountByPeriod(period, month, year)
+	if err != nil {
+		return orderedItemsCountByPeriod, err
+	}
+
+	orderedItemsCountByPeriod.Period = period
+	orderedItemsCountByPeriod.Month = strings.ToLower(month)
+	orderedItemsCountByPeriod.Year = year
+	orderedItemsCountByPeriod.OrderedItemsCount = itemsCount
+
+	return orderedItemsCountByPeriod, nil
 }
