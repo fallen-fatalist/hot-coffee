@@ -28,6 +28,7 @@ func routes() *http.ServeMux {
 	//     POST /inventory: Add a new inventory item.
 	//     GET /inventory: Retrieve all inventory items.
 	mux.HandleFunc("/inventory", httpserver.HandleInventory)
+	mux.HandleFunc("/inventory/getLeftOvers", httpserver.HandleInventoryLeftovers)
 
 	//     GET /inventory/{id}: Retrieve a specific inventory item.
 	//     PUT /inventory/{id}: Update an inventory item.

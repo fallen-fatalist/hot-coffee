@@ -23,6 +23,7 @@ var (
 	ErrInvalidSortValue              = errors.New("incorrect sort by value provided")
 	ErrNegativePage                  = errors.New("negative page provided")
 	ErrNegativePageSize              = errors.New("negative page size proovided")
+	ErrInvalidInventoryPrice         = errors.New("invalid inventory item price provided")
 )
 
 type inventoryService struct {
@@ -69,14 +70,30 @@ func (s *inventoryService) DeleteInventoryItem(id string) error {
 	return s.inventoryRepository.Delete(id)
 }
 
-func (s *inventoryService) GetLeftovers(sortBy string, page, pageSize int) ([]entities.InventoryItem, error) {
-	if sortBy != "quantity" && sortBy != "price" {
-		return nil, ErrInvalidSortValue
-	} else if page < 1 {
-		return nil, ErrNegativePage
-	} else if pageSize < 1 {
-		return nil, ErrNegativePage
+func (s *inventoryService) GetLeftovers(sortBy string, page, pageSize int) (entities.PaginatedInventoryItems, error) {
+	emptyPage := entities.PaginatedInventoryItems{}
+
+	// Default values
+	if sortBy == "" {
+		sortBy = "inventory_item_id"
 	}
+	if page == 0 {
+		page = 1
+	}
+	if pageSize == 0 {
+		pageSize = 10
+	}
+
+	// Validation
+	if sortBy != "quantity" && sortBy != "price" && sortBy != "inventory_item_id" {
+		return emptyPage, ErrInvalidSortValue
+	} else if page < 1 {
+		return emptyPage, ErrNegativePage
+	} else if pageSize < 1 {
+		return emptyPage, ErrNegativePage
+	}
+
+	// Processing
 	offset, rowCount := (page-1)*pageSize, pageSize
 
 	return s.inventoryRepository.GetPage(sortBy, offset, rowCount)
@@ -95,7 +112,11 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 		return ErrIngridientIDContainsSlash
 	} else if strings.Contains(item.IngredientID, " ") {
 		return ErrIngridientIDContainsSpace
-	} else if item.Quantity == 0 {
+	} else if item.Price <= 0 {
+		return ErrInvalidInventoryPrice
+	}
+
+	if item.Quantity == 0 {
 		item.Quantity = 0
 	}
 

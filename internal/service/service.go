@@ -1,6 +1,8 @@
 package service
 
-import "hot-coffee/internal/core/entities"
+import (
+	"hot-coffee/internal/core/entities"
+)
 
 type InventoryService interface {
 	CreateInventoryItem(item entities.InventoryItem) error
@@ -8,7 +10,7 @@ type InventoryService interface {
 	GetInventoryItem(id string) (entities.InventoryItem, error)
 	UpdateInventoryItem(id string, item entities.InventoryItem) error
 	DeleteInventoryItem(id string) error
-	GetLeftovers(sortBy string, page, pageSize int) ([]entities.InventoryItem, error)
+	GetLeftovers(sortBy string, page, pageSize int) (entities.PaginatedInventoryItems, error)
 }
 
 type MenuService interface {

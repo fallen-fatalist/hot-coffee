@@ -2,14 +2,22 @@ package httpsever
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
 	"hot-coffee/internal/utils"
+)
+
+// Errors
+var (
+	ErrNonIntegerPageSize = errors.New("page size must be an integer")
+	ErrNonIntegerPage     = errors.New("page must be an integer")
 )
 
 // Route: /inventory
@@ -119,6 +127,46 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		w.Header().Set("Allow", "GET, PUT, DELETE")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+// Route: /inventory/getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
+func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
+	sortBy := r.URL.Query().Get("sortBy")
+
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil && pageStr != "" {
+		utils.JSONErrorRespond(w, ErrNonIntegerPage, http.StatusBadRequest)
+	}
+
+	pageSizeStr := r.URL.Query().Get("pageSize")
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil && pageSizeStr != "" {
+		utils.JSONErrorRespond(w, ErrNonIntegerPageSize, http.StatusBadRequest)
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		items, err := serviceinstance.InventoryService.GetLeftovers(sortBy, page, pageSize)
+		if err != nil {
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		jsonPayload, err := json.MarshalIndent(items, "", "   ")
+		if err != nil {
+			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonPayload)
+		return
+	default:
+		w.Header().Set("Allow", "GET")
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}

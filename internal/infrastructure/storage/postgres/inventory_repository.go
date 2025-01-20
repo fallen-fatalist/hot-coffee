@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hot-coffee/internal/core/entities"
 	"log/slog"
+	"math"
 	"os"
 	"strconv"
 
@@ -43,11 +44,11 @@ func NewInventoryRepository() *inventoryRepository {
 
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
 	query := `
-        INSERT INTO inventory (name, quantity, unit) 
-        VALUES ($1, $2, $3)
+        INSERT INTO inventory (namem, price, quantity, unit) 
+        VALUES ($1, $2, $3, 4)
 		`
 
-	args := []interface{}{item.Name, item.Quantity, item.Unit}
+	args := []interface{}{item.Name, item.Price, item.Quantity, item.Unit}
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
@@ -116,12 +117,13 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
         UPDATE inventory
 		SET 
 			name = $2, 
-			quantity = $3, 
-			unit = $4
+			price = $3
+			quantity = $4, 
+			unit = $5
 		WHERE inventory_item_id = $1
 		`
 
-	args := []interface{}{id, item.Name, item.Quantity, item.Unit}
+	args := []interface{}{id, item.Name, item.Price, item.Quantity, item.Unit}
 
 	_, err = r.db.Exec(query, args...)
 	if err != nil {
@@ -150,29 +152,45 @@ func (r *inventoryRepository) Delete(idStr string) error {
 	return nil
 }
 
-func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) ([]entities.InventoryItem, error) {
+func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (entities.PaginatedInventoryItems, error) {
+	page := entities.PaginatedInventoryItems{
+		Items: []entities.InventoryItem{},
+	}
+
+	// Get the total number of items for pagination
+	var totalCount int
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM inventory`).Scan(&totalCount)
+	if err != nil {
+		return page, err
+	}
+
 	query := `
-		SELECT item_id, name, price, quantity
+		SELECT inventory_item_id, name, quantity, unit
 		FROM inventory
 		ORDER BY $1 ASC
 		LIMIT $3 OFFSET $2
 	`
 
-	rows, err := r.db.Query(query)
+	// Calculate pagination details
+	page.TotalPages = int(math.Ceil(float64(totalCount) / float64(rowCount)))
+	page.CurrentPage = offset/rowCount + 1
+	page.PageSize = rowCount
+	page.HasNextPage = page.CurrentPage < page.TotalPages
+
+	rows, err := r.db.Query(query, sortBy, offset, rowCount)
 	if err != nil {
-		return nil, err
+		return page, err
 	}
 	defer rows.Close()
 
 	// Iterate over the rows
-	var items []entities.InventoryItem
 	for rows.Next() {
 		var item entities.InventoryItem
 		if err := rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit); err != nil {
-			return nil, err
+			return page, err
 		}
-		items = append(items, item)
+		page.Items = append(page.Items, item)
 	}
 
-	return items, nil
+	return page, nil
 }
