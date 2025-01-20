@@ -36,7 +36,7 @@ CREATE TABLE menu_items(
     menu_item_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     description TEXT NOT NULL, 
-    price INT NOT NULL
+    price DECIMAL(10,2) NOT NULL
 );
 
 CREATE TABLE order_items(
@@ -109,7 +109,7 @@ INSERT INTO menu_items (name, description, price) VALUES
 -- Insert mock menu_items_ingredients linking menu items to inventory
 INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) VALUES
 (1, 1, 1.0), -- Cappuccino uses 1 shot of espresso
-(1, 2, 200.0), -- Cappuccino uses 200ml of milk
+(1, 2, 200.1), -- Cappuccino uses 200ml of milk
 (2, 3, 100.0), -- Blueberry Muffin uses 100g of flour
 (2, 4, 50.0), -- Blueberry Muffin uses 50g of blueberries
 (3, 1, 1.0), -- Latte uses 1 shot of espresso
