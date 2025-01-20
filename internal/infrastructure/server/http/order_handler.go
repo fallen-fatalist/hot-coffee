@@ -63,6 +63,7 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 		order, err := serviceinstance.OrderService.GetOrder(id)
 		if err != nil {
 			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			return
 		}
 		jsonPayload, err := json.MarshalIndent(order, "", "   ")
 		if err != nil {

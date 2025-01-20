@@ -36,7 +36,7 @@ CREATE TABLE menu_items(
     menu_item_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     description TEXT NOT NULL, 
-    price INT NOT NULL
+    price DECIMAL(10,2) NOT NULL
 );
 
 CREATE TABLE order_items(
