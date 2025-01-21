@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Errors
@@ -192,7 +193,7 @@ func (r *orderRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, year int) (map[string]int, error) {
+func (r *orderRepository) GetOrderedItemsCountByPeriod(period, month string, year int) (map[string]int, error) {
 	var query string
 	var args []interface{}
 	var orderedItemsCount map[string]int = make(map[string]int)
@@ -201,36 +202,40 @@ func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, yea
 	if period == "day" {
 		query = `
 			SELECT 
-				EXTRACT(DAY FROM created_at) AS day, 
-				COUNT(order_id) AS order_count 
+				EXTRACT(DAY FROM orders.created_at) AS day, 
+				SUM(order_items.quantity) AS order_count 
 			FROM 
 				orders 
+			JOIN 
+				order_items USING(order_id) 
 			WHERE 
-				TO_CHAR(created_at, 'FMMonth') = $1 
-				AND EXTRACT(YEAR FROM created_at) = $2
-				AND status = 'completed'
+				TO_CHAR(orders.created_at, 'FMMonth') = $1 
+				AND EXTRACT(YEAR FROM orders.created_at) = $2
+				AND orders.status = 'closed'
 			GROUP BY 
-				EXTRACT(DAY FROM created_at)
+				EXTRACT(DAY FROM orders.created_at)
 			ORDER BY 
 				day;
 		`
-		
+
 		args = append(args, month, year)
 
 	} else if period == "month" {
 		query = `
 			SELECT 
-  		  	    TO_CHAR(created_at, 'FMMonth') AS month, 
-  		  	    COUNT(order_id) AS order_count 
+  		  	    TO_CHAR(orders.created_at, 'FMMonth') AS month, 
+  		  	    SUM(order_items.quantity) AS order_count 
   		  	FROM 
-  		  	    orders 
+  		  	    orders
+			JOIN
+				order_items USING(order_id) 
   		  	WHERE 
-  		  	    EXTRACT(YEAR FROM created_at) = $1
-  		  	    AND status = 'completed'
+  		  	    EXTRACT(YEAR FROM orders.created_at) = $1
+  		  	    AND orders.status = 'closed'
   		  	GROUP BY 
-  		  	    TO_CHAR(created_at, 'FMMonth'), EXTRACT(MONTH FROM created_at)
+  		  	    TO_CHAR(orders.created_at, 'FMMonth'), EXTRACT(MONTH FROM orders.created_at)
   		  	ORDER BY 
-  		  	    EXTRACT(MONTH FROM created_at);
+  		  	    EXTRACT(MONTH FROM orders.created_at);
 		`
 		args = append(args, year)
 	} else {
@@ -247,19 +252,32 @@ func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, yea
 	// Scan the result into orderedItemsCount
 	for rows.Next() {
 		var key string
+		var countRaw []byte // Use []byte to read the raw value from the database
 		var count int
 		if period == "day" {
 			var day int
-			if err := rows.Scan(&day, &count); err != nil {
+			if err := rows.Scan(&day, &countRaw); err != nil {
 				return orderedItemsCount, err
 			}
 			key = fmt.Sprintf("%d", day)
 		} else if period == "month" {
-			if err := rows.Scan(&key, &count); err != nil {
+			if err := rows.Scan(&key, &countRaw); err != nil {
 				return orderedItemsCount, err
 			}
 		}
+
+		// Convert countRaw to string, parse as float, and convert to int
+		countFloat, err := strconv.ParseFloat(string(countRaw), 64)
+		if err != nil {
+			return orderedItemsCount, fmt.Errorf("error parsing count: %v", err)
+		}
+		count = int(countFloat) // Convert to int (rounding down)
+
 		orderedItemsCount[strings.ToLower(key)] = count
 	}
 	return orderedItemsCount, nil
+}
+
+func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error) {
+	return entities.OrderedMenuItemsCount{}, nil
 }
