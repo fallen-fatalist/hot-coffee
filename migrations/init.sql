@@ -28,7 +28,7 @@ CREATE TABLE order_status_history(
     past_status TEXT NOT NULL,
     new_status TEXT NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (order_id) REFERENCES orders (order_id) 
+    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
 );
 
 
@@ -44,7 +44,7 @@ CREATE TABLE order_items(
     order_id INTEGER NOT NULL,
     quantity DECIMAL(10, 5) NOT NULL,
     customization_info TEXT NOT NULL,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
 );
 
@@ -52,7 +52,7 @@ CREATE TABLE price_history(
     menu_item_id INTEGER NOT NULL,
     price_difference INT NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id)
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE
 );
 
 
@@ -70,7 +70,7 @@ CREATE TABLE menu_items_ingredients(
     inventory_item_id INTEGER NOT NULL,
     quantity DECIMAL(10, 5) NOT NULL,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
-    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE units(
@@ -82,7 +82,7 @@ CREATE TABLE inventory_transactions(
     inventory_item_id INTEGER NOT NULL,
     transaction_quantity DECIMAL(10, 5) NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
 -- TEMPORARY MOCK DATA INSERTS
