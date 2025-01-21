@@ -1,6 +1,9 @@
 package repository
 
-import "hot-coffee/internal/core/entities"
+import (
+	"hot-coffee/internal/core/entities"
+	"time"
+)
 
 type InventoryRepository interface {
 	Create(item entities.InventoryItem) error
@@ -25,7 +28,8 @@ type OrderRepository interface {
 	GetById(id string) (entities.Order, error)
 	Update(id string, order entities.Order) error
 	Delete(id string) error
-	GetClosedOrdersCountByPeriod(period, month string, year int) (map[string]int, error)
+	GetOrderedItemsCountByPeriod(period, month string, year int) (map[string]int, error)
+	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
 }
 
 type Repository struct {

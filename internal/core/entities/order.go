@@ -24,3 +24,21 @@ type OrderedItemsCountByPeriod struct {
 	Year              int            `json:"year,omitempty"`
 	OrderedItemsCount map[string]int `json:"orderedItems"`
 }
+
+type OrderedMenuItemsCount struct {
+	Espresso            int `json:"espresso,omitempty"`
+	Latte               int `json:"latte,omitempty"`
+	Cappuccino          int `json:"cappuccino,omitempty"`
+	Americano           int `json:"americano,omitempty"`
+	FlatWhite           int `json:"flat_white,omitempty"`
+	Mocha               int `json:"mocha,omitempty"`
+	Croissant           int `json:"croissant,omitempty"`
+	Muffin              int `json:"muffin,omitempty"`
+	BlueberryMuffin     int `json:"blueberry_muffin,omitempty"`
+	ChocolateChipCookie int `json:"chocolate_chip_cookie,omitempty"`
+	Bagel               int `json:"bagel,omitempty"`
+	Cheesecake          int `json:"cheesecake,omitempty"`
+	Tiramisu            int `json:"tiramisu,omitempty"`
+	ChocolateCake       int `json:"chocolate_cake,omitempty"`
+	VanillaCupcake      int `json:"vanilla_cupcake,omitempty"`
+}

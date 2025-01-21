@@ -15,6 +15,7 @@ import (
 // Errors
 var (
 	ErrPeriodTypeInvalid = errors.New("incorrect period type provided")
+	ErrIncorrectMenuItem = errors.New("incorrect menu item fetched, it's absent in menu item count struct")
 )
 
 type orderRepository struct {
@@ -279,5 +280,78 @@ func (r *orderRepository) GetOrderedItemsCountByPeriod(period, month string, yea
 }
 
 func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error) {
-	return entities.OrderedMenuItemsCount{}, nil
+	menuItemsCount := entities.OrderedMenuItemsCount{}
+	args := []interface{}{startDate, endDate}
+	query := `
+		SELECT 
+            menu_items.name AS name,
+            SUM(order_items.quantity) AS quantity
+        FROM orders
+        JOIN order_items USING(order_id)
+        JOIN menu_items USING(menu_item_id)
+        WHERE orders.created_at BETWEEN $1 AND $2
+        GROUP BY menu_items.name
+	`
+
+	// Query the database
+	rows, err := r.db.Query(query, args...)
+	if err != nil {
+		return menuItemsCount, err
+	}
+	defer rows.Close()
+
+	// Scan the result into orderedItemsCount
+	for rows.Next() {
+		var menuItemName string
+		var countRaw []byte // Use []byte to read the raw value from the database
+		var itemCount int
+
+		if err := rows.Scan(&menuItemName, &countRaw); err != nil {
+			return menuItemsCount, err
+		}
+
+		// Convert countRaw to string, parse as float, and convert to int
+		countFloat, err := strconv.ParseFloat(string(countRaw), 64)
+		if err != nil {
+			return menuItemsCount, fmt.Errorf("error parsing count: %v", err)
+		}
+		itemCount = int(countFloat) // Convert to int (rounding down)
+
+		switch menuItemName {
+		case "Espresso":
+			menuItemsCount.Espresso = itemCount
+		case "Latte":
+			menuItemsCount.Latte = itemCount
+		case "Cappuccino":
+			menuItemsCount.Cappuccino = itemCount
+		case "Americano":
+			menuItemsCount.Americano = itemCount
+		case "Flat White":
+			menuItemsCount.FlatWhite = itemCount
+		case "Mocha":
+			menuItemsCount.Mocha = itemCount
+		case "Croissant":
+			menuItemsCount.Croissant = itemCount
+		case "Muffin":
+			menuItemsCount.Muffin = itemCount
+		case "Blueberry Muffin":
+			menuItemsCount.BlueberryMuffin = itemCount
+		case "Chocolate Chip Cookie":
+			menuItemsCount.ChocolateChipCookie = itemCount
+		case "Bagel":
+			menuItemsCount.Bagel = itemCount
+		case "Cheesecake":
+			menuItemsCount.Cheesecake = itemCount
+		case "Tiramisu":
+			menuItemsCount.Tiramisu = itemCount
+		case "Chocolate Cake":
+			menuItemsCount.ChocolateCake = itemCount
+		case "Vanilla Cupcake":
+			menuItemsCount.VanillaCupcake = itemCount
+		default:
+			return menuItemsCount, ErrIncorrectMenuItem
+		}
+	}
+
+	return menuItemsCount, nil
 }

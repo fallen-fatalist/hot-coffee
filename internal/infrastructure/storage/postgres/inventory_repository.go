@@ -15,7 +15,7 @@ import (
 // Errors
 var (
 	ErrUnitNotExists = errors.New("the provided unit measure does not exists in database")
-	ErrNonNumericID  = errors.New("Non-numeric ID provided")
+	ErrNonNumericID  = errors.New("non-numeric ID provided")
 )
 
 type inventoryRepository struct {

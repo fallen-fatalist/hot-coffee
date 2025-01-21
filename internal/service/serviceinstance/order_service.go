@@ -24,10 +24,12 @@ var (
 	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 	ErrNotEnoughIgridient          = errors.New("not enough ingridients")
-	// OrdersByPeriod errors
+	// OrdersCountByPeriod errors
 	ErrPeriodDayInvalid   = errors.New("Incorrect period day provided")
 	ErrPeriodTypeInvalid  = errors.New("Incorrect period type provided")
 	ErrPeriodMonthInvalid = errors.New("Incorrect period month provided")
+	// MenuItemsCountByPeriod
+	ErrEndDateEarlierThanStartDate = errors.New("end date is earlier than start date")
 )
 
 type orderService struct {
@@ -235,8 +237,6 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 		highestSales = append(highestSales, itemsSalesCount[0])
 	}
 
-	// fmt.Println(itemSalesCount, highestSales)
-
 	for idx := len(itemSalesCount) - 1; idx >= 1 && itemsSalesCount[idx] == itemsSalesCount[idx-1]; idx-- {
 		highestSales = append(highestSales, itemsSalesCount[idx-1])
 	}
@@ -292,7 +292,7 @@ func (o *orderService) GetOrderedItemsByPeriod(period, month string, year int) (
 		return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
 	}
 
-	itemsCount, err := o.repository.GetClosedOrdersCountByPeriod(period, month, year)
+	itemsCount, err := o.repository.GetOrderedItemsCountByPeriod(period, month, year)
 	if err != nil {
 		return orderedItemsCountByPeriod, err
 	}
@@ -303,4 +303,11 @@ func (o *orderService) GetOrderedItemsByPeriod(period, month string, year int) (
 	orderedItemsCountByPeriod.OrderedItemsCount = itemsCount
 
 	return orderedItemsCountByPeriod, nil
+}
+
+func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error) {
+	if diff := endDate.Sub(startDate); diff < 0 {
+		return entities.OrderedMenuItemsCount{}, ErrEndDateEarlierThanStartDate
+	}
+	return o.repository.GetOrderedMenuItemsCountByPeriod(startDate, endDate)
 }

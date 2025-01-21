@@ -2,6 +2,7 @@ package service
 
 import (
 	"hot-coffee/internal/core/entities"
+	"time"
 )
 
 type InventoryService interface {
@@ -32,6 +33,7 @@ type OrderService interface {
 	GetPopularMenuItems() ([]entities.MenuItemSales, error)
 	GetOpenOrders() ([]entities.Order, error)
 	GetOrderedItemsByPeriod(period, month string, year int) (entities.OrderedItemsCountByPeriod, error)
+	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
 }
 
 type Service struct {
