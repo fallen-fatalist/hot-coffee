@@ -154,7 +154,7 @@ func (r *inventoryRepository) Delete(idStr string) error {
 
 func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (entities.PaginatedInventoryItems, error) {
 	page := entities.PaginatedInventoryItems{
-		Items: []entities.InventoryItem{},
+		Items: []entities.PageInventoryItem{},
 	}
 
 	// Get the total number of items for pagination
@@ -165,7 +165,7 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 	}
 
 	query := `
-		SELECT inventory_item_id, name, quantity, unit
+		SELECT name, quantity, price
 		FROM inventory
 		ORDER BY $1 ASC
 		LIMIT $3 OFFSET $2
@@ -185,8 +185,8 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 
 	// Iterate over the rows
 	for rows.Next() {
-		var item entities.InventoryItem
-		if err := rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit); err != nil {
+		var item entities.PageInventoryItem
+		if err := rows.Scan(&item.Name, &item.Price, &item.Quantity); err != nil {
 			return page, err
 		}
 		page.Items = append(page.Items, item)

@@ -23,13 +23,13 @@ func routes() http.Handler {
 	mux.HandleFunc("/orders/{id}", httpserver.HandleOrder)
 	//     POST /orders/{id}/close: Close an order.
 	mux.HandleFunc("/orders/{id}/close", httpserver.HandleOrderClose)
+	// GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
+	mux.HandleFunc("/orders/numberOfOrderedItems", httpserver.HandleNumberOfOrderedItems)
 
 	// Inventory:
 	//     POST /inventory: Add a new inventory item.
 	//     GET /inventory: Retrieve all inventory items.
 	mux.HandleFunc("/inventory", httpserver.HandleInventory)
-	//     GET /inventory/getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
-	mux.HandleFunc("/inventory/getLeftOvers", httpserver.HandleInventoryLeftovers)
 
 	//     GET /inventory/{id}: Retrieve a specific inventory item.
 	//     PUT /inventory/{id}: Update an inventory item.
@@ -53,7 +53,7 @@ func routes() http.Handler {
 	mux.HandleFunc("/reports/popular-items", httpserver.HandlePopularItems)
 	// GET /reports/orderedItemsByPeriod?period={day|month}&month={month}
 	mux.HandleFunc("/reports/orderedItemsByPeriod", httpserver.HandleOrderedItemsByPeriod)
-	// GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
-	mux.HandleFunc("/orders/numberOfOrderedItems", httpserver.HandleNumberOfOrderedItems)
+	//     GET /getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
+	mux.HandleFunc("/getLeftOvers", httpserver.HandleInventoryLeftovers)
 	return loggingMiddleware(mux)
 }
