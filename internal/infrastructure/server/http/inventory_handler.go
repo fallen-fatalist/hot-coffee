@@ -3,8 +3,6 @@ package httpsever
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -23,7 +21,6 @@ var (
 // Route: /inventory
 func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	switch r.Method {
 	case http.MethodGet:
@@ -70,7 +67,6 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 // Route: /inventory/{id}
 func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	id := r.PathValue("id")
 	switch r.Method {
@@ -135,7 +131,6 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 // Route: /inventory/getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
 func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	sortBy := r.URL.Query().Get("sortBy")
 
 	pageStr := r.URL.Query().Get("page")

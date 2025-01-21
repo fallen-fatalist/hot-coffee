@@ -3,7 +3,6 @@ package httpsever
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -18,7 +17,6 @@ var (
 
 // Route: /reports/total-sales
 func HandleTotalSales(w http.ResponseWriter, r *http.Request) {
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET")
@@ -42,7 +40,6 @@ func HandleTotalSales(w http.ResponseWriter, r *http.Request) {
 
 // Route: /reports/popular-items
 func HandlePopularItems(w http.ResponseWriter, r *http.Request) {
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET")
@@ -67,7 +64,6 @@ func HandlePopularItems(w http.ResponseWriter, r *http.Request) {
 // Route: /reports/orderedItemsByPeriod
 func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	period := r.URL.Query().Get("period")
 	month := r.URL.Query().Get("month")
@@ -99,4 +95,8 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+}
+
+func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
+
 }

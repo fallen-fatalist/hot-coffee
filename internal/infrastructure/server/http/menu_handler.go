@@ -2,8 +2,6 @@ package httpsever
 
 import (
 	"encoding/json"
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
@@ -15,7 +13,6 @@ import (
 // Route: /menu
 func HandleMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	switch r.Method {
 	case http.MethodGet:
 		items, err := serviceinstance.MenuService.GetMenuItems()
@@ -58,7 +55,6 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 // Route: /menu/<id>
 func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	id := r.PathValue("id")
 	// ID validation

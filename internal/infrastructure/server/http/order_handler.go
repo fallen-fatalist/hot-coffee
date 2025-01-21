@@ -2,8 +2,6 @@ package httpsever
 
 import (
 	"encoding/json"
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
@@ -13,7 +11,6 @@ import (
 
 // Route: /orders
 func HandleOrders(w http.ResponseWriter, r *http.Request) {
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
@@ -55,7 +52,6 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 // Route: /orders/<id>
 func HandleOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	id := r.PathValue("id")
 	switch r.Method {
@@ -103,7 +99,6 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 
 // Route: /orderds/<id>/close
 func HandleOrderClose(w http.ResponseWriter, r *http.Request) {
-	slog.Info(fmt.Sprintf("%s request with URL: %s", r.Method, r.URL.String()))
 
 	id := r.PathValue("id")
 	if r.Method == http.MethodPost {

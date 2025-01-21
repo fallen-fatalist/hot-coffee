@@ -7,7 +7,7 @@ import (
 )
 
 // Returns the router
-func routes() *http.ServeMux {
+func routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Orders:
@@ -47,12 +47,13 @@ func routes() *http.ServeMux {
 	mux.HandleFunc("/menu/{id}", httpserver.HandleMenuItem)
 
 	// Aggregations:
-	//     GET /reports/total-sales: Get the total sales amount.
+	// GET /reports/total-sales: Get the total sales amount.
 	mux.HandleFunc("/reports/total-sales", httpserver.HandleTotalSales)
-	//     GET /reports/popular-items: Get a list of popular menu items.
+	// GET /reports/popular-items: Get a list of popular menu items.
 	mux.HandleFunc("/reports/popular-items", httpserver.HandlePopularItems)
-	//     GET /reports/orderedItemsByPeriod?period={day|month}&month={month}
+	// GET /reports/orderedItemsByPeriod?period={day|month}&month={month}
 	mux.HandleFunc("/reports/orderedItemsByPeriod", httpserver.HandleOrderedItemsByPeriod)
-
-	return mux
+	// GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
+	mux.HandleFunc("/orders/numberOfOrderedItems", httpserver.HandleNumberOfOrderedItems)
+	return loggingMiddleware(mux)
 }

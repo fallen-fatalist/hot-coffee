@@ -214,6 +214,7 @@ func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, yea
 			ORDER BY 
 				day;
 		`
+		
 		args = append(args, month, year)
 
 	} else if period == "month" {
