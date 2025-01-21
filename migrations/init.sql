@@ -69,7 +69,7 @@ CREATE TABLE menu_items_ingredients(
     menu_item_id INTEGER NOT NULL,
     inventory_item_id INTEGER NOT NULL,
     quantity DECIMAL(10, 5) NOT NULL,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
 );
 

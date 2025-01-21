@@ -303,39 +303,12 @@ func (r *menuRepository) Delete(idStr string) error {
 		return ErrNonNumericID
 	}
 
-	// Use a transaction to ensure atomicity
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Delete existing ingredients for the menu item
 	deleteQuery := `
-        DELETE FROM menu_items_ingredients 
+        DELETE FROM menu_items
         WHERE menu_item_id = $1
 	`
-	_, err = tx.Exec(deleteQuery, id)
+	_, err = r.db.Exec(deleteQuery, id)
 	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// delete from menu items
-	query := `
-		DELETE FROM menu_items
-		WHERE menu_item_id = $1
-	`
-
-	_, err = tx.Exec(query, id)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// Commit the transaction
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
