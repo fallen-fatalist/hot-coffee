@@ -43,6 +43,43 @@ func NewOrderRepository() *orderRepository {
 }
 
 func (r *orderRepository) Create(order entities.Order) error {
+	query := `
+		INSERT INTO orders(customer_id, status, created_at)
+		VALUES ($1, $2, $3)
+		RETURNING order_id
+	`
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	var orderId int
+	err = tx.QueryRow(query, order.CustomerName, order.Status, order.CreatedAt).Scan(&orderId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	orderItemsQuery := `
+		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	for _, item := range order.Items {
+		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderId, item.Quantity, item.CustomizationInfo)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return nil
 }
 
@@ -186,11 +223,71 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 	return order, nil
 }
 
-func (r *orderRepository) Update(id string, order entities.Order) error {
+func (r *orderRepository) Update(idStr string, order entities.Order) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ErrNonNumericID
+	}
+	query := `
+		UPDATE orders
+		SET customer_id = $1, status = $2
+		WHERE order_id = $3
+	`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(query, order.CustomerName, order.Status, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	deleteItemsQuery := `
+		DELETE FROM order_items WHERE order_id = $1
+	`
+	_, err = tx.Exec(deleteItemsQuery, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	orderItemsQuery := `
+		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
+		VALUES ($1, $2, $3, $4)
+	`
+	for _, item := range order.Items {
+		_, err = tx.Exec(orderItemsQuery, item.ProductID, id, item.Quantity, item.CustomizationInfo)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return nil
 }
 
-func (r *orderRepository) Delete(id string) error {
+func (r *orderRepository) Delete(idStr string) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ErrNonNumericID
+	}
+
+	deleteOrderQuery := `
+		DELETE FROM orders WHERE order_id = $1
+	`
+	_, err = r.db.Exec(deleteOrderQuery, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

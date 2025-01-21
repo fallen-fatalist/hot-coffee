@@ -1,4 +1,4 @@
--- CREATE TYPE status_type AS ENUM ('accepted', 'rejected');
+-- CREATE TYPE status_type AS ENUM ('open', 'rejected');
 -- CREATE TABLE unit_type AS ENUM ('shots', 'ml', 'g');
 
 
@@ -28,7 +28,7 @@ CREATE TABLE order_status_history(
     past_status TEXT NOT NULL,
     new_status TEXT NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (order_id) REFERENCES orders (order_id) 
+    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
 );
 
 
@@ -44,15 +44,15 @@ CREATE TABLE order_items(
     order_id INTEGER NOT NULL,
     quantity DECIMAL(10, 5) NOT NULL,
     customization_info TEXT NOT NULL,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
-    FOREIGN KEY (order_id) REFERENCES orders (order_id)
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
 );
 
 CREATE TABLE price_history(
     menu_item_id INTEGER NOT NULL,
     price_difference INT NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id)
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE
 );
 
 
@@ -69,8 +69,8 @@ CREATE TABLE menu_items_ingredients(
     menu_item_id INTEGER NOT NULL,
     inventory_item_id INTEGER NOT NULL,
     quantity DECIMAL(10, 5) NOT NULL,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id),
-    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE units(
@@ -82,7 +82,7 @@ CREATE TABLE inventory_transactions(
     inventory_item_id INTEGER NOT NULL,
     transaction_quantity DECIMAL(10, 5) NOT NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id)
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
 -- TEMPORARY MOCK DATA INSERTS
@@ -118,9 +118,9 @@ CREATE TABLE inventory_transactions(
 
 -- -- Insert mock orders
 -- INSERT INTO orders (customer_id, status) VALUES
--- (1, 'accepted'),
+-- (1, 'open'),
 -- (2, 'in progress'),
--- (3, 'completed');
+-- (3, 'closed');
 
 -- -- Insert mock order items
 -- INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) VALUES
@@ -130,16 +130,16 @@ CREATE TABLE inventory_transactions(
 
 -- -- Insert mock statuses
 -- INSERT INTO statuses (name) VALUES
--- ('accepted'),
+-- ('open'),
 -- ('in progress'),
--- ('completed'),
+-- ('closed'),
 -- ('cancelled');
 
 -- -- Insert mock order status history
 -- INSERT INTO order_status_history (order_id, past_status, new_status) VALUES
--- (1, 'pending', 'accepted'),
--- (2, 'accepted', 'in progress'),
--- (3, 'in progress', 'completed');
+-- (1, 'pending', 'open'),
+-- (2, 'open', 'in progress'),
+-- (3, 'in progress', 'closed');
 
 -- -- Insert mock price history
 -- INSERT INTO price_history (menu_item_id, price_difference) VALUES
@@ -168,7 +168,7 @@ INSERT INTO customers (name, surname, phone) VALUES
 ('Emma', 'Green', '+667788556'),
 ('Oliver', 'Taylor', '+556677445');
 
--- Insert mock orders for 2024 (January - December) with 'completed' status
+-- Insert mock orders for 2024 (January - December) with 'closed' status
 -- Duplicated orders with different months and times
 INSERT INTO orders (customer_id, status, created_at) VALUES
 (1, 'closed', '2024-01-05 10:20:30'),
@@ -323,7 +323,7 @@ INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) V
 (2, 23, 1, 'No sugar, extra honey'),
 (6, 24, 2, 'With extra soy milk');
 
--- Insert mock statuses (Accepted, In Progress, Completed, Cancelled)
+-- Insert mock statuses (open, In Progress, closed, Cancelled)
 -- Keep the same status logic (unchanged)
 INSERT INTO statuses (name) VALUES
 ('open'),
