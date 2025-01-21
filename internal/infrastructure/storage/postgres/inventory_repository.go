@@ -44,7 +44,7 @@ func NewInventoryRepository() *inventoryRepository {
 
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
 	query := `
-        INSERT INTO inventory (namem, price, quantity, unit) 
+        INSERT INTO inventory (name, price, quantity, unit) 
         VALUES ($1, $2, $3, 4)
 		`
 
@@ -74,7 +74,7 @@ func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
 	var items []entities.InventoryItem
 	for rows.Next() {
 		var item entities.InventoryItem
-		if err := rows.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit); err != nil {
+		if err := rows.Scan(&item.IngredientID, &item.Name, &item.Price, &item.Quantity, &item.Unit); err != nil {
 			return nil, err
 		}
 		items = append(items, item)

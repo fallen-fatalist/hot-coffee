@@ -41,6 +41,30 @@ func NewOrderRepository() *orderRepository {
 }
 
 func (r *orderRepository) Create(order entities.Order) error {
+	query := `
+		INSERT INTO orders(customer_id, status, created_at)
+		VALUES ($1, $2, $3)
+		RETURNING order_id
+	`
+
+	var orderId int
+	err := r.db.QueryRow(query, order.CustomerName, order.Status, order.CreatedAt).Scan(&orderId)
+	if err != nil {
+		return err
+	}
+
+	orderItemsQuery := `
+		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	for _, item := range order.Items {
+		_, err = r.db.Exec(orderItemsQuery, item.ProductID, orderId, item.Quantity, item.CustomizationInfo)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -184,11 +208,64 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 	return order, nil
 }
 
-func (r *orderRepository) Update(id string, order entities.Order) error {
+func (r *orderRepository) Update(idStr string, order entities.Order) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ErrNonNumericID
+	}
+	query := `
+		UPDATE orders
+		SET customer_id = $1, status = $2, created_at = $3
+		WHERE order_id = $4
+	`
+	_, err = r.db.Exec(query, order.CustomerName, order.Status, order.CreatedAt, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsQuery := `
+		DELETE FROM order_items WHERE order_id = $1
+	`
+	_, err = r.db.Exec(deleteItemsQuery, id)
+	if err != nil {
+		return err
+	}
+
+	orderItemsQuery := `
+		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
+		VALUES ($1, $2, $3, $4)
+	`
+	for _, item := range order.Items {
+		_, err = r.db.Exec(orderItemsQuery, item.ProductID, id, item.Quantity, item.CustomizationInfo)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (r *orderRepository) Delete(id string) error {
+func (r *orderRepository) Delete(idStr string) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ErrNonNumericID
+	}
+	deleteItemsQuery := `
+		DELETE FROM order_items WHERE order_id = $1
+	`
+	_, err = r.db.Exec(deleteItemsQuery, id)
+	if err != nil {
+		return err
+	}
+
+	deleteOrderQuery := `
+		DELETE FROM orders WHERE order_id = $1
+	`
+	_, err = r.db.Exec(deleteOrderQuery, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -208,13 +285,13 @@ func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, yea
 			WHERE 
 				TO_CHAR(created_at, 'FMMonth') = $1 
 				AND EXTRACT(YEAR FROM created_at) = $2
-				AND status = 'completed'
+				AND status = 'closed'
 			GROUP BY 
 				EXTRACT(DAY FROM created_at)
 			ORDER BY 
 				day;
 		`
-		
+
 		args = append(args, month, year)
 
 	} else if period == "month" {
@@ -226,7 +303,7 @@ func (r *orderRepository) GetClosedOrdersCountByPeriod(period, month string, yea
   		  	    orders 
   		  	WHERE 
   		  	    EXTRACT(YEAR FROM created_at) = $1
-  		  	    AND status = 'completed'
+  		  	    AND status = 'closed'
   		  	GROUP BY 
   		  	    TO_CHAR(created_at, 'FMMonth'), EXTRACT(MONTH FROM created_at)
   		  	ORDER BY 
