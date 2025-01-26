@@ -7,7 +7,7 @@ import (
 
 type InventoryService interface {
 	CreateInventoryItem(item entities.InventoryItem) error
-	CreateInventoryTransaction(id string, quantity float64) error
+	SaveInventoryTransaction(id string, quantity float64) error
 	GetInventoryItems() ([]entities.InventoryItem, error)
 	GetInventoryItem(id string) (entities.InventoryItem, error)
 	UpdateInventoryItem(id string, item entities.InventoryItem) error

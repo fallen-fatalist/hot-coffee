@@ -46,8 +46,8 @@ func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) erro
 	return s.inventoryRepository.Create(item)
 }
 
-func (s *inventoryService) CreateInventoryTransaction(id string, quantity float64) error {
-	return s.inventoryRepository.CreateInventoryTransaction(id, quantity)
+func (s *inventoryService) SaveInventoryTransaction(id string, quantity float64) error {
+	return s.inventoryRepository.SaveInventoryTransaction(id, quantity)
 }
 
 func (s *inventoryService) GetInventoryItems() ([]entities.InventoryItem, error) {

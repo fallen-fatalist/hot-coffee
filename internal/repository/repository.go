@@ -7,7 +7,7 @@ import (
 
 type InventoryRepository interface {
 	Create(item entities.InventoryItem) error
-	CreateInventoryTransaction(id string, quantity float64) error
+	SaveInventoryTransaction(id string, quantity float64) error
 	GetAll() ([]entities.InventoryItem, error)
 	GetById(id string) (entities.InventoryItem, error)
 	Update(id string, item entities.InventoryItem) error

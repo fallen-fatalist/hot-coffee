@@ -134,7 +134,7 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
 
 }
 
-func (r *inventoryRepository) CreateInventoryTransaction(idStr string, quantity float64) error {
+func (r *inventoryRepository) SaveInventoryTransaction(idStr string, quantity float64) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return ErrNonNumericID

@@ -184,7 +184,7 @@ func deductInventory(ingridientsCount map[string]float64) error {
 
 func addInventoryTransactions(ingridientsCount map[string]float64) error {
 	for ingridientID, quantity := range ingridientsCount {
-		if err := InventoryService.CreateInventoryTransaction(ingridientID, quantity); err != nil {
+		if err := InventoryService.SaveInventoryTransaction(ingridientID, quantity); err != nil {
 			return err
 		}
 	}
