@@ -160,6 +160,11 @@ func validateSufficienceOfIngridients(order entities.Order) error {
 		return err
 	}
 
+	// insert into inventory transaction
+	if err := addInventoryTransactions(ingridients); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -171,6 +176,15 @@ func deductInventory(ingridientsCount map[string]float64) error {
 		}
 		inventoryItem.Quantity -= quantity
 		if err := InventoryService.UpdateInventoryItem(ingridientID, inventoryItem); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addInventoryTransactions(ingridientsCount map[string]float64) error {
+	for ingridientID, quantity := range ingridientsCount {
+		if err := InventoryService.CreateInventoryTransaction(ingridientID, quantity); err != nil {
 			return err
 		}
 	}

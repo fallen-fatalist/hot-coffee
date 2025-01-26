@@ -134,6 +134,26 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
 
 }
 
+func (r *inventoryRepository) CreateInventoryTransaction(idStr string, quantity float64) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ErrNonNumericID
+	}
+
+	query := `
+	INSERT INTO inventory_transactions(inventory_item_id, transaction_quantity)
+	VALUES ($1, $2)
+	`
+	args := []interface{}{id, quantity}
+
+	_, err = r.db.Exec(query, args...)
+	if err != nil {
+		return err
+
+	}
+	return nil
+}
+
 func (r *inventoryRepository) Delete(idStr string) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
