@@ -25,9 +25,9 @@ var (
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 	ErrNotEnoughIgridient          = errors.New("not enough ingridients")
 	// OrdersCountByPeriod errors
-	ErrPeriodDayInvalid   = errors.New("Incorrect period day provided")
-	ErrPeriodTypeInvalid  = errors.New("Incorrect period type provided")
-	ErrPeriodMonthInvalid = errors.New("Incorrect period month provided")
+	ErrPeriodDayInvalid   = errors.New("incorrect period day provided")
+	ErrPeriodTypeInvalid  = errors.New("incorrect period type provided")
+	ErrPeriodMonthInvalid = errors.New("incorrect period month provided")
 	// MenuItemsCountByPeriod
 	ErrEndDateEarlierThanStartDate = errors.New("end date is earlier than start date")
 )
@@ -50,7 +50,12 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 		return err
 	}
 
-	return s.repository.Create(order)
+	id, err := s.repository.Create(order)
+	if err != nil {
+		return err
+	}
+
+	return s.repository.SetOrderStatusHistory(id, "", order.Status)
 }
 
 func (s *orderService) GetOrders() ([]entities.Order, error) {
@@ -79,6 +84,11 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 		return err
 	}
 
+	if order.Status != orderDB.Status {
+		if err := s.repository.SetOrderStatusHistory(id, orderDB.Status, order.Status); err != nil {
+			return err
+		}
+	}
 	return s.repository.Update(id, order)
 }
 
@@ -91,8 +101,19 @@ func (s *orderService) CloseOrder(id string) error {
 	if err != nil {
 		return err
 	}
+
+	if order.Status != "in progress" {
+		return ErrIncorrectOrderStatus
+	}
+
+	pastStatus := order.Status
 	order.Status = "closed"
-	return s.repository.Update(id, order)
+
+	if err := s.repository.Update(id, order); err != nil {
+		return err
+	}
+
+	return s.repository.SetOrderStatusHistory(id, pastStatus, order.Status)
 }
 
 func (s *orderService) SetInProgress(id string) error {
@@ -100,7 +121,9 @@ func (s *orderService) SetInProgress(id string) error {
 	if err != nil {
 		return err
 	}
-
+	if order.Status == "closed" {
+		return ErrClosedOrderCannotBeModified
+	}
 	order.Status = "in progress"
 
 	if err := validateSufficienceOfIngridients(order); err != nil {

@@ -24,7 +24,8 @@ type MenuRepository interface {
 }
 
 type OrderRepository interface {
-	Create(order entities.Order) error
+	Create(order entities.Order) (string, error)
+	SetOrderStatusHistory(idStr, pastStatus, newStatus string) error
 	GetAll() ([]entities.Order, error)
 	GetById(id string) (entities.Order, error)
 	Update(id string, order entities.Order) error

@@ -42,7 +42,7 @@ func NewOrderRepository() *orderRepository {
 	return orderRepositoryInstance
 }
 
-func (r *orderRepository) Create(order entities.Order) error {
+func (r *orderRepository) Create(order entities.Order) (string, error) {
 	query := `
 		INSERT INTO orders(customer_id, status)
 		VALUES ($1, $2)
@@ -51,14 +51,14 @@ func (r *orderRepository) Create(order entities.Order) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var orderId int
 	err = tx.QueryRow(query, order.CustomerName, order.Status).Scan(&orderId)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
 	orderItemsQuery := `
@@ -70,17 +70,17 @@ func (r *orderRepository) Create(order entities.Order) error {
 		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderId, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return "", err
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
-	return nil
+	return strconv.Itoa(orderId), nil
 }
 
 func (r *orderRepository) GetAll() ([]entities.Order, error) {
@@ -451,4 +451,36 @@ func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate ti
 	}
 
 	return menuItemsCount, nil
+}
+
+func (r *orderRepository) SetOrderStatusHistory(idStr, pastStatus, newStatus string) error {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return err
+	}
+
+	var query string
+	var args []interface{}
+
+	// Insert NULL for past_status if it's the first status change
+	if pastStatus == "" {
+		query = `
+		INSERT INTO order_status_history(order_id, new_status)
+		VALUES ($1, $2)
+		`
+		args = []interface{}{id, newStatus}
+	} else {
+		query = `
+		INSERT INTO order_status_history(order_id, past_status, new_status)
+		VALUES ($1, $2, $3)
+		`
+		args = []interface{}{id, pastStatus, newStatus}
+	}
+
+	_, err = r.db.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
