@@ -110,6 +110,17 @@ func HandleOrderClose(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HandleOrderInProgress(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if r.Method == http.MethodPost {
+		serviceinstance.OrderService.SetInProgress(id)
+	} else {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 func HandleOpenOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method == "GET" {

@@ -99,7 +99,7 @@ func (r *inventoryRepository) GetById(idStr string) (entities.InventoryItem, err
 	// Query to get multiple users
 	row := r.db.QueryRow(query, id)
 
-	if err := row.Scan(&item.IngredientID, &item.Name, &item.Quantity, &item.Unit); err != nil {
+	if err := row.Scan(&item.IngredientID, &item.Name, &item.Price, &item.Quantity, &item.Unit); err != nil {
 		return item, err
 	}
 
@@ -117,7 +117,7 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
         UPDATE inventory
 		SET 
 			name = $2, 
-			price = $3
+			price = $3,
 			quantity = $4, 
 			unit = $5
 		WHERE inventory_item_id = $1

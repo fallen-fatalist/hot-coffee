@@ -50,9 +50,9 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 		return err
 	}
 
-	if err := validateSufficienceOfIngridients(order); err != nil {
-		return err
-	}
+	// if err := validateSufficienceOfIngridients(order); err != nil {
+	// 	return err
+	// }
 
 	return s.repository.Create(order)
 }
@@ -97,6 +97,22 @@ func (s *orderService) CloseOrder(id string) error {
 	}
 	order.Status = "closed"
 	return s.repository.Update(id, order)
+}
+
+func (s *orderService) SetInProgress(id string) error {
+	order, err := s.GetOrder(id)
+	if err != nil {
+		return err
+	}
+
+	order.Status = "in progress"
+
+	if err := validateSufficienceOfIngridients(order); err != nil {
+		return err
+	}
+
+	return s.repository.Update(id, order)
+
 }
 
 func validateOrder(order entities.Order) error {

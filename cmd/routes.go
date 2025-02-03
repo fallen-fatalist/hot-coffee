@@ -23,6 +23,8 @@ func routes() http.Handler {
 	mux.HandleFunc("/orders/{id}", httpserver.HandleOrder)
 	//     POST /orders/{id}/close: Close an order.
 	mux.HandleFunc("/orders/{id}/close", httpserver.HandleOrderClose)
+	//     POST /orders/{id}/in_progress: Start processing an order.
+	mux.HandleFunc("/orders/{id}/in_progress", httpserver.HandleOrderInProgress)
 	// GET /numberOfOrderedItems?startDate={startDate}&endDate={endDate}
 	mux.HandleFunc("/orders/numberOfOrderedItems", httpserver.HandleNumberOfOrderedItems)
 
