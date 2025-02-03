@@ -50,10 +50,6 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 		return err
 	}
 
-	// if err := validateSufficienceOfIngridients(order); err != nil {
-	// 	return err
-	// }
-
 	return s.repository.Create(order)
 }
 

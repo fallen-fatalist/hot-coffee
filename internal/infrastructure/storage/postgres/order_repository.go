@@ -44,8 +44,8 @@ func NewOrderRepository() *orderRepository {
 
 func (r *orderRepository) Create(order entities.Order) error {
 	query := `
-		INSERT INTO orders(customer_id, status, created_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO orders(customer_id, status)
+		VALUES ($1, $2)
 		RETURNING order_id
 	`
 
@@ -55,7 +55,7 @@ func (r *orderRepository) Create(order entities.Order) error {
 	}
 
 	var orderId int
-	err = tx.QueryRow(query, order.CustomerName, order.Status, order.CreatedAt).Scan(&orderId)
+	err = tx.QueryRow(query, order.CustomerName, order.Status).Scan(&orderId)
 	if err != nil {
 		tx.Rollback()
 		return err
