@@ -68,38 +68,47 @@ func (s *orderService) GetOrder(id string) (entities.Order, error) {
 }
 
 func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
+	// Retrieve the current order from the repository
 	orderDB, err := s.repository.GetById(idStr)
 	if err != nil {
 		return err
 	}
-	order.Status = orderDB.Status
 
+	// Check if the order is closed; closed orders cannot be modified
 	if orderDB.Status == "closed" {
 		return ErrClosedOrderCannotBeModified
 	}
-	if err := validateOrder(order); err != nil {
-		return err
-	}
+
+	// Ensure the provided order ID matches the path ID
 	if idStr != order.ID {
 		return ErrInventoryItemIDCollision
 	}
 
-	if order.Status == "in progress" {
+	// Validate the order before proceeding
+	if err := validateOrder(order); err != nil {
+		return err
+	}
+
+	// If the order is in progress, ensure ingredients are sufficient
+	if orderDB.Status == "in progress" {
 		if err := validateSufficienceOfIngridients(order); err != nil {
 			return err
 		}
 	}
 
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return err
-	}
+	// If the status has changed, record it in the status history
 	if order.Status != orderDB.Status {
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			return err
+		}
 		if err := s.repository.SetOrderStatusHistory(id, orderDB.Status, order.Status); err != nil {
 			return err
 		}
 	}
 
+	// Proceed to update the order in the repository
+	order.Status = orderDB.Status
 	return s.repository.Update(idStr, order)
 }
 
