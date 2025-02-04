@@ -68,47 +68,35 @@ func (s *orderService) GetOrder(id string) (entities.Order, error) {
 }
 
 func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
-	// Retrieve the current order from the repository
 	orderDB, err := s.repository.GetById(idStr)
 	if err != nil {
 		return err
 	}
+	pastStatus := order.Status
+	order.Status = orderDB.Status
 
-	// Check if the order is closed; closed orders cannot be modified
-	if orderDB.Status == "closed" {
+	if orderDB.Status == "closed" || orderDB.Status == "in progress" {
 		return ErrClosedOrderCannotBeModified
 	}
-
-	// Ensure the provided order ID matches the path ID
+	if err := validateOrder(order); err != nil {
+		return err
+	}
 	if idStr != order.ID {
 		return ErrInventoryItemIDCollision
 	}
 
-	// Validate the order before proceeding
-	if err := validateOrder(order); err != nil {
-		return err
-	}
-
-	// If the order is in progress, ensure ingredients are sufficient
 	if orderDB.Status == "in progress" {
 		if err := validateSufficienceOfIngridients(order); err != nil {
 			return err
 		}
 	}
 
-	// If the status has changed, record it in the status history
-	if order.Status != orderDB.Status {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			return err
-		}
-		if err := s.repository.SetOrderStatusHistory(id, orderDB.Status, order.Status); err != nil {
+	if pastStatus != orderDB.Status {
+		if err := s.updateOrderStatusHistory(idStr, orderDB.Status, order.Status); err != nil {
 			return err
 		}
 	}
 
-	// Proceed to update the order in the repository
-	order.Status = orderDB.Status
 	return s.repository.Update(idStr, order)
 }
 
@@ -126,17 +114,21 @@ func (s *orderService) CloseOrder(idStr string) error {
 		return ErrIncorrectOrderStatus
 	}
 
-	pastStatus := order.Status
-	order.Status = "closed"
-
-	if err := s.repository.Update(idStr, order); err != nil {
+	// Update status and record the change
+	if err := s.updateOrderStatusHistory(idStr, order.Status, "closed"); err != nil {
 		return err
 	}
+
+	order.Status = "closed"
+	return s.repository.Update(idStr, order)
+}
+
+func (s *orderService) updateOrderStatusHistory(idStr, oldStatus, newStatus string) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return err
 	}
-	return s.repository.SetOrderStatusHistory(id, pastStatus, order.Status)
+	return s.repository.SetOrderStatusHistory(id, oldStatus, newStatus)
 }
 
 func (s *orderService) SetInProgress(id string) error {
