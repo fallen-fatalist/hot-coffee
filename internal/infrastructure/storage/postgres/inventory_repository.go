@@ -45,7 +45,7 @@ func NewInventoryRepository() *inventoryRepository {
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
 	query := `
         INSERT INTO inventory (name, price, quantity, unit) 
-        VALUES ($1, $2, $3, 4)
+        VALUES ($1, $2, $3, $4)
 		`
 
 	args := []interface{}{item.Name, item.Price, item.Quantity, item.Unit}
