@@ -42,7 +42,7 @@ func NewOrderRepository() *orderRepository {
 	return orderRepositoryInstance
 }
 
-func (r *orderRepository) Create(order entities.Order) (string, error) {
+func (r *orderRepository) Create(order entities.Order) (int, error) {
 	query := `
 		INSERT INTO orders(customer_id, status)
 		VALUES ($1, $2)
@@ -51,14 +51,14 @@ func (r *orderRepository) Create(order entities.Order) (string, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	var orderId int
 	err = tx.QueryRow(query, order.CustomerName, order.Status).Scan(&orderId)
 	if err != nil {
 		tx.Rollback()
-		return "", err
+		return -1, err
 	}
 
 	orderItemsQuery := `
@@ -70,17 +70,17 @@ func (r *orderRepository) Create(order entities.Order) (string, error) {
 		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderId, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
-			return "", err
+			return -1, err
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return "", err
+		return -1, err
 	}
 
-	return strconv.Itoa(orderId), nil
+	return orderId, nil
 }
 
 func (r *orderRepository) GetAll() ([]entities.Order, error) {
@@ -453,11 +453,7 @@ func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate ti
 	return menuItemsCount, nil
 }
 
-func (r *orderRepository) SetOrderStatusHistory(idStr, pastStatus, newStatus string) error {
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return err
-	}
+func (r *orderRepository) SetOrderStatusHistory(id int, pastStatus, newStatus string) error {
 
 	var query string
 	var args []interface{}
@@ -477,7 +473,7 @@ func (r *orderRepository) SetOrderStatusHistory(idStr, pastStatus, newStatus str
 		args = []interface{}{id, pastStatus, newStatus}
 	}
 
-	_, err = r.db.Exec(query, args...)
+	_, err := r.db.Exec(query, args...)
 	if err != nil {
 		return err
 	}

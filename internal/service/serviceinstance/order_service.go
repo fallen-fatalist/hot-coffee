@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -66,8 +67,8 @@ func (s *orderService) GetOrder(id string) (entities.Order, error) {
 	return s.repository.GetById(id)
 }
 
-func (s *orderService) UpdateOrder(id string, order entities.Order) error {
-	orderDB, err := s.repository.GetById(id)
+func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
+	orderDB, err := s.repository.GetById(idStr)
 	if err != nil {
 		return err
 	}
@@ -79,25 +80,35 @@ func (s *orderService) UpdateOrder(id string, order entities.Order) error {
 	if err := validateOrder(order); err != nil {
 		return err
 	}
-
-	if err := validateSufficienceOfIngridients(order); err != nil {
-		return err
+	if idStr != order.ID {
+		return ErrInventoryItemIDCollision
 	}
 
+	if order.Status == "in progress" {
+		if err := validateSufficienceOfIngridients(order); err != nil {
+			return err
+		}
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return err
+	}
 	if order.Status != orderDB.Status {
 		if err := s.repository.SetOrderStatusHistory(id, orderDB.Status, order.Status); err != nil {
 			return err
 		}
 	}
-	return s.repository.Update(id, order)
+
+	return s.repository.Update(idStr, order)
 }
 
 func (s *orderService) DeleteOrder(id string) error {
 	return s.repository.Delete(id)
 }
 
-func (s *orderService) CloseOrder(id string) error {
-	order, err := s.GetOrder(id)
+func (s *orderService) CloseOrder(idStr string) error {
+	order, err := s.GetOrder(idStr)
 	if err != nil {
 		return err
 	}
@@ -109,10 +120,13 @@ func (s *orderService) CloseOrder(id string) error {
 	pastStatus := order.Status
 	order.Status = "closed"
 
-	if err := s.repository.Update(id, order); err != nil {
+	if err := s.repository.Update(idStr, order); err != nil {
 		return err
 	}
-
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return err
+	}
 	return s.repository.SetOrderStatusHistory(id, pastStatus, order.Status)
 }
 
