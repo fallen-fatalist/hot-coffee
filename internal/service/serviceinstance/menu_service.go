@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
 
 	"hot-coffee/internal/core/entities"
@@ -42,7 +43,12 @@ func (s *menuService) CreateMenuItem(item entities.MenuItem) error {
 		return err
 	}
 
-	return s.menuRepository.Create(item)
+	id, err := s.menuRepository.Create(item)
+	if err != nil {
+		return err
+	}
+
+	return s.menuRepository.AddPriceDifference(id, int(item.Price))
 }
 
 func (s *menuService) GetMenuItem(id string) (entities.MenuItem, error) {
@@ -53,16 +59,29 @@ func (s *menuService) GetMenuItems() ([]entities.MenuItem, error) {
 	return s.menuRepository.GetAll()
 }
 
-func (s *menuService) UpdateMenuItem(id string, item entities.MenuItem) error {
+func (s *menuService) UpdateMenuItem(idStr string, item entities.MenuItem) error {
 	if err := validateMenuItem(item); err != nil {
 		return err
 	}
 
-	if id != item.ID {
+	if idStr != item.ID {
 		return ErrInventoryItemIDCollision
 	}
 
-	return s.menuRepository.Update(id, item)
+	if err := s.menuRepository.Update(idStr, item); err != nil {
+		return err
+	}
+
+	menuItem, err := s.GetMenuItem(idStr)
+	if err != nil {
+		return err
+	}
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return err
+	}
+
+	return s.menuRepository.AddPriceDifference(id, int(menuItem.Price)-int(item.Price))
 }
 
 func (s *menuService) DeleteMenuItem(id string) error {

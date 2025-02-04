@@ -32,7 +32,7 @@ func NewMenuRepository() *menuRepository {
 	return menuRepositoryInstance
 }
 
-func (r *menuRepository) Create(item entities.MenuItem) error {
+func (r *menuRepository) Create(item entities.MenuItem) (int, error) {
 	// Query to insert a new menu item
 	query := `
         INSERT INTO menu_items (name, description, price) 
@@ -43,7 +43,7 @@ func (r *menuRepository) Create(item entities.MenuItem) error {
 	// Use a transaction to ensure atomicity
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	// Insert the menu item and get the generated ID
@@ -51,7 +51,7 @@ func (r *menuRepository) Create(item entities.MenuItem) error {
 	err = tx.QueryRow(query, item.Name, item.Description, item.Price).Scan(&menuItemID)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return -1, err
 	}
 
 	// Query to insert menu item ingredients
@@ -65,7 +65,7 @@ func (r *menuRepository) Create(item entities.MenuItem) error {
 		_, err = tx.Exec(ingredientQuery, menuItemID, ingredient.IngredientID, ingredient.Quantity)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return -1, err
 		}
 	}
 
@@ -73,10 +73,10 @@ func (r *menuRepository) Create(item entities.MenuItem) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return -1, err
 	}
 
-	return nil
+	return menuItemID, nil
 }
 
 func (r *menuRepository) GetAll() ([]entities.MenuItem, error) {
@@ -308,6 +308,20 @@ func (r *menuRepository) Delete(idStr string) error {
         WHERE menu_item_id = $1
 	`
 	_, err = r.db.Exec(deleteQuery, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *menuRepository) AddPriceDifference(id int, price_difference int) error {
+	query := `
+	INSERT INTO price_history(menu_item_id, price_difference)
+	VALUES ($1, $2)
+	`
+
+	_, err := r.db.Exec(query, id, price_difference)
 	if err != nil {
 		return err
 	}
