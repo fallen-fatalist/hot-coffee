@@ -37,7 +37,7 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 
 		err = serviceinstance.OrderService.CreateOrder(order)
 		if err != nil {
-			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
