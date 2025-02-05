@@ -92,7 +92,7 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 	}
 
 	if pastStatus != orderDB.Status {
-		if err := s.updateOrderStatusHistory(idStr, orderDB.Status, order.Status); err != nil {
+		if err := s.updateOrderStatusHistory(idStr, pastStatus, order.Status); err != nil {
 			return err
 		}
 	}
