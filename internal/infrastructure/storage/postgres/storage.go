@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"hot-coffee/internal/repository"
 	"log/slog"
+	"os"
 	"time"
 )
 
 // Database credentials
 var (
-	dbName   = "frappuccino"
-	host     = "db"
-	userName = "latte"
-	password = "latte"
-	port     = "5432"
+	dbName   = os.Getenv("DB_NAME")
+	host     = os.Getenv("DB_HOST")
+	userName = os.Getenv("DB_USER")
+	password = os.Getenv("DB_PASSWORD")
+	port     = os.Getenv("DB_PORT")
 )
 
 // postgres://YourUserName:YourPassword@YourHostname:5432/YourDatabaseName
