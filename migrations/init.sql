@@ -6,20 +6,19 @@ CREATE TABLE customers(
     customer_id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     surname TEXT NOT NULL,
-    phone VARCHAR(20) CHECK (phone ~ '^\+?[0-9\-()\s]{7,20}$')
+    phone VARCHAR(20) CONSTRAINT phone_pattern CHECK (phone ~ '^\+?[0-9\-()\s]{7,20}$')
 );
 
 CREATE TABLE orders(
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL,
     status TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
 );
 
 CREATE TABLE statuses(
-    status_id SERIAL PRIMARY KEY,
-    name TEXT
+    name TEXT PRIMARY KEY
 );
 
 
@@ -36,21 +35,22 @@ CREATE TABLE menu_items(
     menu_item_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     description TEXT NOT NULL, 
-    price DECIMAL(10,2) NOT NULL
+    price DECIMAL(10,2) NOT NULL CONSTRAINT positive_price CHECK (price > 0)
 );
 
 CREATE TABLE order_items(
     menu_item_id INTEGER NOT NULL, 
     order_id INTEGER NOT NULL,
-    quantity DECIMAL(10, 5) NOT NULL,
+    quantity DECIMAL(10, 5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
     customization_info TEXT NOT NULL,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
+    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE price_history(
     menu_item_id INTEGER NOT NULL,
-    price_difference INT NOT NULL,
+    price_difference INT NOT NULL CONSTRAINT not_the_same CHECK (price_difference != 0),
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE
 );
@@ -60,102 +60,30 @@ CREATE TABLE price_history(
 CREATE TABLE inventory(
     inventory_item_id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    quantity DECIMAL(10,5) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CONSTRAINT positive_price CHECK (price > 0),
+    quantity DECIMAL(10,5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity >= 0),
     unit VARCHAR(20)
 );
 
 CREATE TABLE menu_items_ingredients(
     menu_item_id INTEGER NOT NULL,
     inventory_item_id INTEGER NOT NULL,
-    quantity DECIMAL(10, 5) NOT NULL,
+    quantity DECIMAL(10, 5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE units(
-    unit_id SERIAL PRIMARY KEY,
-    name VARCHAR(20)
+    name VARCHAR(20) PRIMARY KEY
 );
 
 CREATE TABLE inventory_transactions(
     inventory_item_id INTEGER NOT NULL,
-    transaction_quantity DECIMAL(10, 5) NOT NULL,
+    transaction_quantity DECIMAL(10, 5) NOT NULL CONSTRAINT not_the_same CHECK (transaction_quantity != 0),
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
 
--- TEMPORARY MOCK DATA INSERTS
-
--- -- Insert mock inventory data
--- INSERT INTO inventory (name, price, quantity, unit) VALUES
--- ('Espresso Shot', 300, 500, 'shots'),
--- ('Milk', 200, 5000, 'ml'),
--- ('Flour', 100, 10000, 'g'),
--- ('Blueberries', 50, 2000, 'g'),
--- ('Sugar', 10, 5000, 'g');
-
--- -- Insert mock customers
--- INSERT INTO customers (name, surname, phone) VALUES
--- ('John', 'Doe', '+123456789'),
--- ('Jane', 'Smith', '+987654321'),
--- ('Alice', 'Johnson', '+112233445');
-
--- -- Insert mock menu items
--- INSERT INTO menu_items (name, description, price) VALUES
--- ('Cappuccino', 'Espresso with steamed milk foam', 5),
--- ('Blueberry Muffin', 'Freshly baked with blueberries', 3),
--- ('Latte', 'Espresso with steamed milk', 4);
-
--- -- Insert mock menu_items_ingredients linking menu items to inventory
--- INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) VALUES
--- (1, 1, 1.0), -- Cappuccino uses 1 shot of espresso
--- (1, 2, 200.0), -- Cappuccino uses 200ml of milk
--- (2, 3, 100.0), -- Blueberry Muffin uses 100g of flour
--- (2, 4, 50.0), -- Blueberry Muffin uses 50g of blueberries
--- (3, 1, 1.0), -- Latte uses 1 shot of espresso
--- (3, 2, 300.0); -- Latte uses 300ml of milk
-
--- -- Insert mock orders
--- INSERT INTO orders (customer_id, status) VALUES
--- (1, 'open'),
--- (2, 'in progress'),
--- (3, 'closed');
-
--- -- Insert mock order items
--- INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) VALUES
--- (1, 1, 1, 'Extra foam'),
--- (2, 2, 2, 'No sugar'),
--- (3, 3, 1, 'With almond milk');
-
--- -- Insert mock statuses
--- INSERT INTO statuses (name) VALUES
--- ('open'),
--- ('in progress'),
--- ('closed'),
--- ('cancelled');
-
--- -- Insert mock order status history
--- INSERT INTO order_status_history (order_id, past_status, new_status) VALUES
--- (1, 'pending', 'open'),
--- (2, 'open', 'in progress'),
--- (3, 'in progress', 'closed');
-
--- -- Insert mock price history
--- INSERT INTO price_history (menu_item_id, price_difference) VALUES
--- (1, 1), -- Cappuccino price increased by $1
--- (2, 0), -- Blueberry Muffin price unchanged
--- (3, 2); -- Latte price increased by $2
-
--- -- Insert mock inventory transactions
--- INSERT INTO inventory_transactions (inventory_item_id, transaction_quantity) VALUES
--- (1, -10), -- 10 Espresso Shots used
--- (2, -500), -- 500ml of milk used
--- (3, -300), -- 300g of flour used
--- (4, -100), -- 100g of blueberries used
--- (5, 500); -- 500g of sugar restocked
-
--- Larger mock data
 
 -- Insert mock customers (duplicating existing ones for variety)
 INSERT INTO customers (name, surname, phone) VALUES
@@ -260,6 +188,53 @@ INSERT INTO inventory (name, unit, quantity, price) VALUES
 ('Cocoa Powder', 'grams', 300, 15),
 ('Coffee Syrup', 'ml', 500, 30);
 
+-- Insert mock menu item ingredients
+INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) VALUES
+(1, 1, 18),  -- Espresso: 18g of Espresso Beans per shot
+(2, 1, 18),  -- Latte: 18g of Espresso Beans
+(2, 2, 200),  -- Latte: 200ml of Whole Milk
+(3, 1, 18),  -- Cappuccino: 18g of Espresso Beans
+(3, 2, 150),  -- Cappuccino: 150ml of Whole Milk
+(3, 14, 5),  -- Cappuccino: 5g of Cocoa Powder
+(4, 1, 18),  -- Americano: 18g of Espresso Beans
+(5, 1, 18),  -- Flat White: 18g of Espresso Beans
+(5, 2, 180),  -- Flat White: 180ml of Whole Milk
+(6, 1, 18),  -- Mocha: 18g of Espresso Beans
+(6, 2, 150),  -- Mocha: 150ml of Whole Milk
+(6, 8, 30),  -- Mocha: 30g of Chocolate Chips
+(6, 10, 20),  -- Mocha: 20g of Whipped Cream
+(7, 4, 100),  -- Croissant: 100g of Flour
+(7, 6, 50),  -- Croissant: 50g of Butter
+(8, 4, 120),  -- Muffin: 120g of Flour
+(8, 5, 30),  -- Muffin: 30g of Sugar
+(8, 6, 40),  -- Muffin: 40g of Butter
+(9, 4, 120),  -- Blueberry Muffin: 120g of Flour
+(9, 5, 30),  -- Blueberry Muffin: 30g of Sugar
+(9, 6, 40),  -- Blueberry Muffin: 40g of Butter
+(9, 7, 50),  -- Blueberry Muffin: 50g of Blueberries
+(10, 8, 25),  -- Chocolate Chip Cookie: 25g of Chocolate Chips
+(10, 4, 90),  -- Chocolate Chip Cookie: 90g of Flour
+(10, 5, 30),  -- Chocolate Chip Cookie: 30g of Sugar
+(10, 6, 20),  -- Chocolate Chip Cookie: 20g of Butter
+(11, 4, 150),  -- Bagel: 150g of Flour
+(11, 6, 20),  -- Bagel: 20g of Butter
+(12, 9, 100),  -- Cheesecake: 100g of Cream Cheese
+(12, 5, 50),  -- Cheesecake: 50g of Sugar
+(12, 12, 80),  -- Cheesecake: 80g of Graham Crackers
+(13, 13, 100),  -- Tiramisu: 100g of Mascarpone Cheese
+(13, 5, 30),  -- Tiramisu: 30g of Sugar
+(13, 14, 10),  -- Tiramisu: 10g of Cocoa Powder
+(13, 15, 50),  -- Tiramisu: 50ml of Coffee Syrup
+(14, 8, 50),  -- Chocolate Cake: 50g of Chocolate Chips
+(14, 4, 120),  -- Chocolate Cake: 120g of Flour
+(14, 5, 40),  -- Chocolate Cake: 40g of Sugar
+(14, 6, 30),  -- Chocolate Cake: 30g of Butter
+(15, 4, 100),  -- Vanilla Cupcake: 100g of Flour
+(15, 5, 35),  -- Vanilla Cupcake: 35g of Sugar
+(15, 6, 25),  -- Vanilla Cupcake: 25g of Butter
+(15, 11, 5);  -- Vanilla Cupcake: 5ml of Vanilla Extract
+
+
 -- Insert mock inventory transactions (usage and restock events)
 INSERT INTO inventory_transactions (inventory_item_id, transaction_quantity) VALUES
 (1, -40),  -- 40 grams of Espresso Beans used
@@ -328,6 +303,7 @@ INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) V
 INSERT INTO statuses (name) VALUES
 ('open'),
 ('in progress'),
+('rejected'),
 ('closed');
 
 -- Insert mock order status history (expanded with more orders)
@@ -354,8 +330,7 @@ INSERT INTO order_status_history (order_id, past_status, new_status) VALUES
 
 -- Insert mock price history (expanded with more items)
 INSERT INTO price_history (menu_item_id, price_difference) VALUES
-(1, 1),
-(2, 0),
+(2, 1),
 (3, 2),
 (4, 1),  -- New menu item
 (5, 1);  -- New menu item
