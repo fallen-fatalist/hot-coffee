@@ -58,14 +58,16 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 	query := `
 		INSERT INTO orders(customer_id, status)
 		VALUES ($1, $2)
+		RETURNING customer_id
 	`
 
-	res, err := tx.Exec(query, order.CustomerID, order.Status)
-	if err != nil {
+	row := tx.QueryRow(query, order.CustomerID, order.Status)
+	if row.Err() != nil {
 		return 0, err
 	}
 
-	orderID, err := res.LastInsertId()
+	var orderID int64
+	err = row.Scan(&orderID)
 	if err != nil {
 		tx.Rollback()
 		return 0, err
