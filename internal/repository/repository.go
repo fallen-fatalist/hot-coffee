@@ -12,6 +12,7 @@ type InventoryRepository interface {
 	GetById(id string) (entities.InventoryItem, error)
 	Update(id string, item entities.InventoryItem) error
 	Delete(id string) error
+	// Pager for inventory items \\
 	GetPage(sortBy string, offset, rowCount int) (entities.PaginatedInventoryItems, error)
 }
 
@@ -25,14 +26,15 @@ type MenuRepository interface {
 }
 
 type OrderRepository interface {
-	Create(order entities.Order) (int, error)
-	SetOrderStatusHistory(id int, pastStatus, newStatus string) error
+	Create(order entities.Order) (int64, error)
+	SetOrderStatusHistory(id int64, pastStatus, newStatus string) error
 	GetAll() ([]entities.Order, error)
 	GetById(id string) (entities.Order, error)
 	Update(id string, order entities.Order) error
 	Delete(id string) error
 	GetOrderedItemsCountByPeriod(period, month string, year int) (map[string]int, error)
 	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
+	GetCustomerIDByName(fullname string, phone string) (int64, error)
 }
 
 type Repository struct {
