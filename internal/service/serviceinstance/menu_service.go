@@ -26,6 +26,7 @@ var (
 	ErrMenuItemIDContainsSlash    = errors.New("menu item id contains slash")
 )
 
+// TODO: Loading Menu items into memory
 type menuService struct {
 	menuRepository repository.MenuRepository
 }
