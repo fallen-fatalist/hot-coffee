@@ -10,7 +10,7 @@ type Order struct {
 }
 
 type OrderItem struct {
-	MenuItemID        string `json:"product_id"`
+	ProductID         string `json:"product_id"`
 	Quantity          int    `json:"quantity"`
 	CustomizationInfo string `json:"customization_info,omitempty"`
 }
