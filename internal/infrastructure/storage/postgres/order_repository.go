@@ -55,13 +55,13 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		}
 	}()
 
-	query := `
+	insertOrderQuery := `
 		INSERT INTO orders(customer_id, status)
 		VALUES ($1, $2)
-		RETURNING customer_id
+		RETURNING order_id
 	`
 
-	row := tx.QueryRow(query, order.CustomerID, order.Status)
+	row := tx.QueryRow(insertOrderQuery, order.CustomerID, order.Status)
 	if row.Err() != nil {
 		return 0, err
 	}
@@ -72,15 +72,18 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		tx.Rollback()
 		return 0, err
 	}
+	slog.Info("Creating the order: ", "id", orderID)
+
+	// TODO: calculate while inserting number of items
 
 	// Insert order items
-	orderItemsQuery := `
+	insertOrderItemQuery := `
 		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
 		VALUES ($1, $2, $3, $4)
 	`
 
 	for _, item := range order.Items {
-		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderID, item.Quantity, item.CustomizationInfo)
+		_, err = tx.Exec(insertOrderItemQuery, item.ProductID, orderID, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
 			return 0, err
@@ -539,16 +542,18 @@ func (r *orderRepository) GetCustomerIDByName(fullname string, phone string) (in
 				(fullname, phone)
 			VALUES 
 				($1, $2)
+			RETURNING customer_id
 		`
-		res, err := r.db.Exec(insertQuery, fullname, phone)
+		row := r.db.QueryRow(insertQuery, fullname, phone)
+		if row.Err() != nil {
+			return 0, err
+		}
+
+		err = row.Scan(&customer_id)
 		if err != nil {
 			return 0, err
 		}
 
-		customer_id, err = res.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
 	} else if err != nil {
 		return 0, err
 	}
