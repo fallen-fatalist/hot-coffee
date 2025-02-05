@@ -12,7 +12,17 @@ import (
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repository"
+	"hot-coffee/internal/utils"
 )
+
+// Constants
+const (
+	OpenStatus       = "open"
+	ClosedStatus     = "closed"
+	InProgressStatus = "in progress"
+)
+
+var statuses = []string{OpenStatus, ClosedStatus, InProgressStatus}
 
 // Errors
 var (
@@ -46,18 +56,50 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 }
 
 func (s *orderService) CreateOrder(order entities.Order) error {
-	order.Status = "open"
+	order.Status = OpenStatus
 	if err := validateOrder(order); err != nil {
 		return err
 	}
 
-	id, err := s.repository.Create(order)
+	// Fetch customer customer_id
+	customerID, err := s.repository.GetCustomerIDByName(order.CustomerName, "")
+	if err != nil {
+		return fmt.Errorf("error while fetching the customer name: %w", err)
+	}
+	order.CustomerID = customerID
+
+	orderID, err := s.repository.Create(order)
 	if err != nil {
 		return err
 	}
 
-	return s.repository.SetOrderStatusHistory(id, "", order.Status)
+	err = s.repository.SetOrderStatusHistory(orderID, "", order.Status)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
+
+// // Creates order and returns the
+// func (o *orderService) CreateOrders(orders []entities.Order) ([]dto.ProcessedOrder, error) {
+// 	// Concurrect calls of CreateOrder
+
+// 	var wg sync.WaitGroup
+// 	for _, order := range orders {
+// 		wg.Add(1)
+
+// 		go func() {
+// 			defer wg.Done()
+// 			o.CreateOrder(order)
+// 			// Handle insufficient inventory
+
+// 		}()
+// 	}
+// 	wg.Wait()
+
+// 	return nil, nil
+// }
 
 func (s *orderService) GetOrders() ([]entities.Order, error) {
 	return s.repository.GetAll()
@@ -85,11 +127,13 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 		return ErrInventoryItemIDCollision
 	}
 
-	if orderDB.Status == "in progress" {
-		if err := validateSufficienceOfIngridients(order); err != nil {
-			return err
-		}
-	}
+	// if orderDB.Status == "in progress" {
+	// 	if err := validateSufficienceOfIngridients(order); err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	// MUST DO: Add deduction logic
 
 	if pastStatus != orderDB.Status {
 		if err := s.updateOrderStatusHistory(idStr, pastStatus, order.Status); err != nil {
@@ -128,7 +172,7 @@ func (s *orderService) updateOrderStatusHistory(idStr, oldStatus, newStatus stri
 	if err != nil {
 		return err
 	}
-	return s.repository.SetOrderStatusHistory(id, oldStatus, newStatus)
+	return s.repository.SetOrderStatusHistory(int64(id), oldStatus, newStatus)
 }
 
 func (s *orderService) SetInProgress(id string) error {
@@ -136,15 +180,7 @@ func (s *orderService) SetInProgress(id string) error {
 	if err != nil {
 		return err
 	}
-	if order.Status == "closed" {
-		return ErrClosedOrderCannotBeModified
-	}
-	order.Status = "in progress"
-
-	if err := validateSufficienceOfIngridients(order); err != nil {
-		return err
-	}
-
+	order.Status = ClosedStatus
 	return s.repository.Update(id, order)
 
 }
@@ -152,7 +188,7 @@ func (s *orderService) SetInProgress(id string) error {
 func validateOrder(order entities.Order) error {
 	if order.CustomerName == "" {
 		return ErrEmptyCustomerName
-	} else if order.Status != "open" && order.Status != "closed" {
+	} else if !utils.In(order.Status, statuses) {
 		return ErrIncorrectOrderStatus
 	} else if len(order.Items) == 0 {
 		return ErrNoItemsInOrder
@@ -181,56 +217,52 @@ func validateOrder(order entities.Order) error {
 	return nil
 }
 
-func validateSufficienceOfIngridients(order entities.Order) error {
-	ingridients := make(map[string]float64)
-	for _, orderItem := range order.Items {
-		menuItem, err := MenuService.GetMenuItem(orderItem.ProductID)
-		if err != nil {
-			return err
-		}
-		for _, ingridient := range menuItem.Ingredients {
-			ingridients[ingridient.IngredientID] += ingridient.Quantity * float64(orderItem.Quantity)
-		}
-	}
+// func validateSufficienceOfIngridients(order entities.Order) error {
+// 	ingridients := make(map[string]float64)
+// 	for _, orderItem := range order.Items {
+// 		menuItem, err := MenuService.GetMenuItem(orderItem.MenuItemID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		for _, ingridient := range menuItem.Ingredients {
+// 			ingridients[ingridient.IngredientID] += ingridient.Quantity * float64(orderItem.Quantity)
+// 		}
+// 	}
 
-	// Ingridients quantity check
-	for ingridientID, quantity := range ingridients {
-		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
-		if err != nil {
-			return err
-		}
+// 	// Ingridients quantity check
+// 	for ingridientID, quantity := range ingridients {
+// 		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		if inventoryItem.Quantity < quantity {
-			return fmt.Errorf(ErrNotEnoughIgridient.Error()+": %s", ingridientID)
-		}
-	}
+// 		if inventoryItem.Quantity < quantity {
+// 			return fmt.Errorf(ErrNotEnoughIgridient.Error()+": %s", ingridientID)
+// 		}
+// 	}
 
-	// deduction after check
-	if err := deductInventory(ingridients); err != nil {
-		return err
-	}
+// 	deduction after check
+// 	if err := deductInventory(ingridients); err != nil {
+// 		return err
+// 	}
 
-	// insert into inventory transaction
-	if err := addInventoryTransactions(ingridients); err != nil {
-		return err
-	}
+// 	return nil
+// }
 
-	return nil
-}
-
-func deductInventory(ingridientsCount map[string]float64) error {
-	for ingridientID, quantity := range ingridientsCount {
-		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
-		if err != nil {
-			return err
-		}
-		inventoryItem.Quantity -= quantity
-		if err := InventoryService.UpdateInventoryItem(ingridientID, inventoryItem); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// TODO: MUST BE REPLACED
+// func deductInventory(ingridientsCount map[string]float64) error {
+// 	for ingridientID, quantity := range ingridientsCount {
+// 		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		inventoryItem.Quantity -= quantity
+// 		if err := InventoryService.UpdateInventoryItem(ingridientID, inventoryItem); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 func addInventoryTransactions(ingridientsCount map[string]float64) error {
 	for ingridientID, quantity := range ingridientsCount {
@@ -249,7 +281,7 @@ func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
 	}
 
 	for _, order := range orders {
-		if order.Status == "closed" {
+		if order.Status == ClosedStatus {
 			for _, orderItem := range order.Items {
 				menuItem, err := MenuService.GetMenuItem(orderItem.ProductID)
 				if err != nil {
@@ -273,7 +305,7 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 	itemSalesCount := make(map[string]int)
 
 	for _, order := range orders {
-		if order.Status == "closed" {
+		if order.Status == ClosedStatus {
 			for _, orderItem := range order.Items {
 				itemSalesCount[orderItem.ProductID] += orderItem.Quantity
 			}
@@ -314,7 +346,7 @@ func (o *orderService) GetOpenOrders() ([]entities.Order, error) {
 	}
 	openOrders := []entities.Order{}
 	for _, order := range orders {
-		if order.Status == "open" {
+		if order.Status == OpenStatus {
 			openOrders = append(openOrders, order)
 		}
 	}
