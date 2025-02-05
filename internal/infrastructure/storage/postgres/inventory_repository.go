@@ -2,14 +2,16 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"log/slog"
 	"math"
 	"os"
 	"strconv"
 
-	_ "github.com/lib/pq"
+	"hot-coffee/internal/core/errors"
+
+	"github.com/lib/pq"
 )
 
 // Errors
@@ -216,26 +218,26 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 }
 
 type inventoryCount struct {
-	ingridientID    string
-	ingridientCount float64
+	ingredientID    string
+	ingredientCount float64
 	itemCount       int
 }
 
-func (r *inventoryRepository) deductOrderItemsIngridients(tx *sql.Tx, orderID int64) error {
-	// Part 1 Join Menu Items and their Ingridients
-	// We fetch data to know how many ingridients to deduct
+func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID int64) error {
+	// Part 1 Join Menu Items and their Ingredients
+	// We fetch data to know how many ingredients to deduct
 
-	// DO INDEXATION for query IDs
+	// MUST DO: INDEXATION for query IDs
 	joinQuery := `
 		SELECT
 			mii.inventory_item_id,
-			mii.quantity as ingridient_quantity,
+			mii.quantity as ingredient_quantity,
 			oi.quantity as item_count
-		FROM menu_items_ingridients mii
+		FROM menu_items_ingredients mii
 		JOIN order_items oi USING(menu_item_id)
 		WHERE oi.order_id = $1
 	`
-	menuItemsIngridients := make([]entities.MenuItemIngredient, 0)
+	menuItemsIngredients := make([]entities.MenuItemIngredient, 0)
 
 	rows, err := tx.Query(joinQuery, orderID)
 	if err != nil {
@@ -246,13 +248,22 @@ func (r *inventoryRepository) deductOrderItemsIngridients(tx *sql.Tx, orderID in
 
 	for rows.Next() {
 		var count inventoryCount
-		if err := rows.Scan(&count.ingridientID, &count.ingridientCount, &count.itemCount); err != nil {
+		var countRaw []byte
+		if err := rows.Scan(&count.ingredientID, &count.ingredientCount, &countRaw); err != nil {
 			tx.Rollback()
 			return err
 		}
-		menuItemsIngridients = append(menuItemsIngridients, entities.MenuItemIngredient{
-			IngredientID: count.ingridientID,
-			Quantity:     count.ingridientCount * float64(count.itemCount),
+
+		// Convert countRaw to string, parse as float, and convert to int
+		countFloat, err := strconv.ParseFloat(string(countRaw), 64)
+		if err != nil {
+			return fmt.Errorf("error parsing count: %v", err)
+		}
+		count.itemCount = int(countFloat) // Convert to int (rounding down)
+
+		menuItemsIngredients = append(menuItemsIngredients, entities.MenuItemIngredient{
+			IngredientID: count.ingredientID,
+			Quantity:     count.ingredientCount * float64(count.itemCount),
 		})
 	}
 
@@ -264,10 +275,17 @@ func (r *inventoryRepository) deductOrderItemsIngridients(tx *sql.Tx, orderID in
 		WHERE inventory_item_id = $1
 	`
 
-	for _, menuItemIngridient := range menuItemsIngridients {
-		args := []interface{}{menuItemIngridient.IngredientID, menuItemIngridient.Quantity}
+	for _, menuItemIngredient := range menuItemsIngredients {
+		args := []interface{}{menuItemIngredient.IngredientID, menuItemIngredient.Quantity}
 		_, err := tx.Exec(deductQuery, args...)
 		if err != nil {
+			var pgErr *pq.Error
+			if errors.As(err, &pgErr) {
+				if pgErr.Code == "23514" && pgErr.Constraint == "positive_quantity" {
+					return errors.NewErrInsufficientIngredient(menuItemIngredient.IngredientID)
+				}
+			}
+
 			tx.Rollback()
 			return err
 		}
