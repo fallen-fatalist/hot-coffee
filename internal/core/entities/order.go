@@ -4,14 +4,14 @@ type Order struct {
 	ID           string      `json:"order_id,omitempty"`
 	CustomerName string      `json:"customer_name"`
 	Items        []OrderItem `json:"items"`
-	Status       string      `json:"status"`
-	CreatedAt    string      `json:"created_at"`
+	Status       string      `json:"status,omitempty"`
+	CreatedAt    string      `json:"created_at,omitempty"`
 }
 
 type OrderItem struct {
-	ProductID         string `json:"product_id"`
+	MenuItemID        string `json:"menu_item_id"`
 	Quantity          int    `json:"quantity"`
-	CustomizationInfo string `json:"customization_info"`
+	CustomizationInfo string `json:"customization_info,omitempty"`
 }
 
 type TotalSales struct {
