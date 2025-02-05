@@ -101,6 +101,7 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 // 	return nil, nil
 // }
 
+// MUST DO: Fix empty items field in Order struct
 func (s *orderService) GetOrders() ([]entities.Order, error) {
 	return s.repository.GetAll()
 }
