@@ -1,4 +1,4 @@
-package httpsever
+package httpserver
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/service/serviceinstance"
-	"hot-coffee/internal/utils"
 )
 
 // Route: /orders
@@ -16,13 +15,13 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		orders, err := serviceinstance.OrderService.GetOrders()
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(orders, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -32,12 +31,13 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&order)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
+
 		err = serviceinstance.OrderService.CreateOrder(order)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -58,12 +58,12 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		order, err := serviceinstance.OrderService.GetOrder(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		jsonPayload, err := json.MarshalIndent(order, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -73,19 +73,19 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&order)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		err = serviceinstance.OrderService.UpdateOrder(id, order)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		return
 	case http.MethodDelete:
 		err := serviceinstance.OrderService.DeleteOrder(id)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -126,13 +126,13 @@ func HandleOpenOrders(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		openOrders, err := serviceinstance.OrderService.GetOpenOrders()
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(openOrders, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -142,4 +142,37 @@ func HandleOpenOrders(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+}
+
+type batchRequest struct {
+	Orders []entities.Order `json:"orders"`
+}
+
+// POST /orders/batch-process
+func HandleBatchOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method == "POST" {
+
+		// Request Body  Parsing \\
+		var req batchRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		// Service Call \\
+		// _, err := serviceinstance.OrderService.CreateOrders(req.Orders)
+		// if err != nil {
+		// 	JSONErrorRespond(w, err, http.StatusInternalServerError)
+		// 	return
+		// }
+
+		w.WriteHeader(http.StatusCreated)
+		return
+	} else {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 }

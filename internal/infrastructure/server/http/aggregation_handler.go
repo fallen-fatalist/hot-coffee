@@ -1,4 +1,4 @@
-package httpsever
+package httpserver
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"hot-coffee/internal/service/serviceinstance"
-	"hot-coffee/internal/utils"
 )
 
 // Errors
@@ -28,13 +27,13 @@ func HandleTotalSales(w http.ResponseWriter, r *http.Request) {
 
 	sales, err := serviceinstance.OrderService.GetTotalSales()
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+		jsonErrorRespond(w, err, http.StatusBadRequest)
 		return
 	}
 
 	jsonPayload, err := json.MarshalIndent(sales, "", "   ")
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+		jsonErrorRespond(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Write(jsonPayload)
@@ -51,13 +50,13 @@ func HandlePopularItems(w http.ResponseWriter, r *http.Request) {
 
 	popularItems, err := serviceinstance.OrderService.GetPopularMenuItems()
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+		jsonErrorRespond(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	jsonPayload, err := json.MarshalIndent(popularItems, "", "   ")
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+		jsonErrorRespond(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Write(jsonPayload)
@@ -73,7 +72,7 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 
 	year, err := strconv.Atoi(yearStr)
 	if err != nil && yearStr != "" {
-		utils.JSONErrorRespond(w, ErrNonIntegerYear, http.StatusBadRequest)
+		jsonErrorRespond(w, ErrNonIntegerYear, http.StatusBadRequest)
 		return
 	}
 
@@ -81,13 +80,13 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.OrderService.GetOrderedItemsByPeriod(period, month, year)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(items, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -107,13 +106,13 @@ func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 
 	startDate, err := time.Parse(dateLayout, r.URL.Query().Get("startDate"))
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+		jsonErrorRespond(w, err, http.StatusBadRequest)
 		return
 	}
 
 	endDate, err := time.Parse(dateLayout, r.URL.Query().Get("endDate"))
 	if err != nil {
-		utils.JSONErrorRespond(w, err, http.StatusBadRequest)
+		jsonErrorRespond(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -125,13 +124,13 @@ func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 			if errors.Is(err, serviceinstance.ErrEndDateEarlierThanStartDate) {
 				statusCode = http.StatusBadRequest
 			}
-			utils.JSONErrorRespond(w, err, statusCode)
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(items, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)

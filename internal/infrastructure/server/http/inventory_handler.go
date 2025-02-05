@@ -1,4 +1,4 @@
-package httpsever
+package httpserver
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
-	"hot-coffee/internal/utils"
 )
 
 // Errors
@@ -26,13 +25,13 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.InventoryService.GetInventoryItems()
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(items, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -42,7 +41,7 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		err = serviceinstance.InventoryService.CreateInventoryItem(item)
@@ -52,7 +51,7 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 			case jsonrepository.ErrInventoryItemAlreadyExists:
 				statusCode = http.StatusConflict
 			}
-			utils.JSONErrorRespond(w, err, statusCode)
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -78,13 +77,13 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 			case jsonrepository.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
-			utils.JSONErrorRespond(w, err, statusCode)
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(item, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)
@@ -94,7 +93,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&item)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		err = serviceinstance.InventoryService.UpdateInventoryItem(id, item)
@@ -104,7 +103,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 			case jsonrepository.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
-			utils.JSONErrorRespond(w, err, statusCode)
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 		return
@@ -116,7 +115,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 			case jsonrepository.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
-			utils.JSONErrorRespond(w, err, statusCode)
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -136,14 +135,14 @@ func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil && pageStr != "" {
-		utils.JSONErrorRespond(w, ErrNonIntegerPage, http.StatusBadRequest)
+		jsonErrorRespond(w, ErrNonIntegerPage, http.StatusBadRequest)
 		return
 	}
 
 	pageSizeStr := r.URL.Query().Get("pageSize")
 	pageSize, err := strconv.Atoi(pageSizeStr)
 	if err != nil && pageSizeStr != "" {
-		utils.JSONErrorRespond(w, ErrNonIntegerPageSize, http.StatusBadRequest)
+		jsonErrorRespond(w, ErrNonIntegerPageSize, http.StatusBadRequest)
 		return
 	}
 
@@ -151,13 +150,13 @@ func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.InventoryService.GetLeftovers(sortBy, page, pageSize)
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		jsonPayload, err := json.MarshalIndent(items, "", "   ")
 		if err != nil {
-			utils.JSONErrorRespond(w, err, http.StatusInternalServerError)
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
 		w.Write(jsonPayload)

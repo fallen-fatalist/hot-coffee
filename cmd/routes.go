@@ -59,5 +59,12 @@ func routes() http.Handler {
 	mux.HandleFunc("/orderedItemsByPeriod", httpserver.HandleOrderedItemsByPeriod)
 	// GET /getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
 	mux.HandleFunc("/getLeftOvers", httpserver.HandleInventoryLeftovers)
-	return loggingMiddleware(mux)
+
+	// POST /orders/batch-process
+	mux.HandleFunc("/orders/batch-process", httpserver.HandleBatchOrders)
+
+	// Logging middleware applied
+	loggedMux := requestLoggingMiddleware(mux)
+
+	return loggedMux
 }
