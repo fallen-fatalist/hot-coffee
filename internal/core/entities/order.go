@@ -3,13 +3,14 @@ package entities
 type Order struct {
 	ID           string      `json:"order_id,omitempty"`
 	CustomerName string      `json:"customer_name"`
+	CustomerID   int64       `json:"customer_id,omitempty"`
 	Items        []OrderItem `json:"items"`
 	Status       string      `json:"status,omitempty"`
 	CreatedAt    string      `json:"created_at,omitempty"`
 }
 
 type OrderItem struct {
-	MenuItemID        string `json:"menu_item_id"`
+	MenuItemID        string `json:"product_id"`
 	Quantity          int    `json:"quantity"`
 	CustomizationInfo string `json:"customization_info,omitempty"`
 }
