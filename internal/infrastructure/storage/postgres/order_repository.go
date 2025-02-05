@@ -42,45 +42,68 @@ func NewOrderRepository() *orderRepository {
 	return orderRepositoryInstance
 }
 
-func (r *orderRepository) Create(order entities.Order) (int, error) {
+func (r *orderRepository) Create(order entities.Order) (int64, error) {
+	// Begin the transaction
+	tx, err := r.db.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
 	query := `
 		INSERT INTO orders(customer_id, status)
 		VALUES ($1, $2)
-		RETURNING order_id
 	`
 
-	tx, err := r.db.Begin()
+	res, err := tx.Exec(query, order.CustomerID, order.Status)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
-	var orderId int
-	err = tx.QueryRow(query, order.CustomerName, order.Status).Scan(&orderId)
+	orderID, err := res.LastInsertId()
 	if err != nil {
 		tx.Rollback()
-		return -1, err
+		return 0, err
 	}
 
+	// Insert order items
 	orderItemsQuery := `
 		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
 		VALUES ($1, $2, $3, $4)
 	`
 
 	for _, item := range order.Items {
-		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderId, item.Quantity, item.CustomizationInfo)
+		_, err = tx.Exec(orderItemsQuery, item.ProductID, orderID, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
-			return -1, err
+			return 0, err
 		}
 	}
 
+	// Deduct order items
+	err = inventoryRepositoryInstance.deductOrderItemsIngridients(tx, orderID)
+	if err != nil {
+		return 0, err
+	}
+
+	// Commit transaction if all succeeds
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
 		return -1, err
 	}
 
-	return orderId, nil
+	return orderID, nil
+}
+
+func (r *orderRepository) CreateOrders([]entities.Order) error {
+
+	return nil
 }
 
 func (r *orderRepository) GetAll() ([]entities.Order, error) {
@@ -453,7 +476,7 @@ func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate ti
 	return menuItemsCount, nil
 }
 
-func (r *orderRepository) SetOrderStatusHistory(id int, pastStatus, newStatus string) error {
+func (r *orderRepository) SetOrderStatusHistory(id int64, pastStatus, newStatus string) error {
 
 	var query string
 	var args []interface{}
@@ -479,4 +502,53 @@ func (r *orderRepository) SetOrderStatusHistory(id int, pastStatus, newStatus st
 	}
 
 	return nil
+}
+
+func (r *orderRepository) GetCustomerIDByName(fullname string, phone string) (int64, error) {
+	var customer_id int64
+	var query string
+	var args []interface{}
+	switch {
+	case phone != "":
+		query = ` 
+		SELECT 
+			customer_id
+		FROM customers
+		WHERE fullname = $1 AND phone = $2
+		`
+		args = []interface{}{fullname, phone}
+	default:
+		query = ` 
+		SELECT 
+			customer_id
+		FROM customers
+		WHERE fullname = $1
+		`
+		args = []interface{}{fullname}
+	}
+
+	row := r.db.QueryRow(query, args...)
+
+	err := row.Scan(&customer_id)
+	// Handle no existing customer
+	if err == sql.ErrNoRows {
+		insertQuery := `
+			INSERT INTO customers 
+				(fullname, phone)
+			VALUES 
+				($1, $2)
+		`
+		res, err := r.db.Exec(insertQuery, fullname, phone)
+		if err != nil {
+			return 0, err
+		}
+
+		customer_id, err = res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+	} else if err != nil {
+		return 0, err
+	}
+	return customer_id, nil
 }
