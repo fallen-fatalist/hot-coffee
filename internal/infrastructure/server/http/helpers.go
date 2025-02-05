@@ -1,6 +1,8 @@
 package httpserver
 
 import (
+	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -10,7 +12,6 @@ type errorEnveloper struct {
 }
 
 func jsonErrorRespond(w http.ResponseWriter, err error, statusCode int) {
-	slog.Error(err.Error())
 	if statusCode == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
@@ -20,7 +21,13 @@ func jsonErrorRespond(w http.ResponseWriter, err error, statusCode int) {
 	if err != nil {
 		slog.Error(err.Error())
 	}
-	message := "Undefined server error"
 
-	w.Write([]byte(message))
+	// Hide error if related to server
+	if statusCode >= 500 {
+		err = fmt.Errorf("internal server error occured")
+	}
+
+	json, _ := json.Marshal(errorEnveloper{Err: err.Error()})
+
+	w.Write(json)
 }
