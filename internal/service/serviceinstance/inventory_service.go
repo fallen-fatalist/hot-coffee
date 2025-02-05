@@ -18,8 +18,8 @@ var (
 	ErrEmptyUnit                     = errors.New("empty unit provided")
 	ErrInventoryItemIDCollision      = errors.New("id collision between id in request body and id in url")
 	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
-	ErrIngridientIDContainsSlash     = errors.New("ingridient id contains slash")
-	ErrIngridientIDContainsSpace     = errors.New("ingridient id contains space")
+	ErrIngredientIDContainsSlash     = errors.New("ingredient id contains slash")
+	ErrIngredientIDContainsSpace     = errors.New("ingredient id contains space")
 	ErrInvalidSortValue              = errors.New("incorrect sort by value provided")
 	ErrNegativePage                  = errors.New("negative page provided")
 	ErrNegativePageSize              = errors.New("negative page size proovided")
@@ -113,9 +113,9 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 	} else if item.Quantity < 0 {
 		return ErrNegativeInventoryItemQuantity
 	} else if strings.Contains(item.IngredientID, "/") {
-		return ErrIngridientIDContainsSlash
+		return ErrIngredientIDContainsSlash
 	} else if strings.Contains(item.IngredientID, " ") {
-		return ErrIngridientIDContainsSpace
+		return ErrIngredientIDContainsSpace
 	} else if item.Price <= 0 {
 		return ErrInvalidInventoryPrice
 	}

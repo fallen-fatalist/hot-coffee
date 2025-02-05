@@ -18,10 +18,10 @@ var (
 	ErrEmptyMenuItemName          = errors.New("empty menu item name provided")
 	ErrNegativePrice              = errors.New("negative price in menu item provided")
 	ErrZeroPrice                  = errors.New("zero price in menu item provided")
-	ErrNegativeIngridientQuantity = errors.New("ingridient negative quantity provided")
-	ErrZeroIngridientQuantity     = errors.New("ingridient quantity is zero")
-	ErrIngridientDuplicate        = errors.New("duplicated ingridient provided in inventory item")
-	ErrIngridientIsNotInInventory = errors.New("ingridient is not present in inventory")
+	ErrNegativeIngredientQuantity = errors.New("ingredient negative quantity provided")
+	ErrZeroIngredientQuantity     = errors.New("ingredient quantity is zero")
+	ErrIngredientDuplicate        = errors.New("duplicated ingredient provided in inventory item")
+	ErrIngredientIsNotInInventory = errors.New("ingredient is not present in inventory")
 	ErrMenuItemIDContainsSpace    = errors.New("menu item id contains space")
 	ErrMenuItemIDContainsSlash    = errors.New("menu item id contains slash")
 )
@@ -104,8 +104,8 @@ func validateMenuItem(item entities.MenuItem) error {
 		return ErrMenuItemIDContainsSpace
 	}
 
-	ingridientList := make(map[string]bool)
-	inventoryIngridients := make(map[string]bool)
+	ingredientList := make(map[string]bool)
+	inventoryIngredients := make(map[string]bool)
 
 	// Fill the map
 	inventoryItems, err := InventoryService.GetInventoryItems()
@@ -113,28 +113,28 @@ func validateMenuItem(item entities.MenuItem) error {
 		return fmt.Errorf("error while getting inventory items: %s", err)
 	}
 	for _, inventoryItem := range inventoryItems {
-		inventoryIngridients[inventoryItem.IngredientID] = true
+		inventoryIngredients[inventoryItem.IngredientID] = true
 	}
 
-	// Ingridients validation
-	for _, ingridient := range item.Ingredients {
-		// Ingridient duplicate check
-		if _, exists := ingridientList[ingridient.IngredientID]; exists {
-			return ErrIngridientDuplicate
+	// Ingredients validation
+	for _, ingredient := range item.Ingredients {
+		// Ingredient duplicate check
+		if _, exists := ingredientList[ingredient.IngredientID]; exists {
+			return ErrIngredientDuplicate
 		} else {
-			ingridientList[ingridient.IngredientID] = true
+			ingredientList[ingredient.IngredientID] = true
 		}
 
-		// Ingridient presence in inventory check
-		if _, exists := inventoryIngridients[ingridient.IngredientID]; !exists {
-			return ErrIngridientIsNotInInventory
+		// Ingredient presence in inventory check
+		if _, exists := inventoryIngredients[ingredient.IngredientID]; !exists {
+			return ErrIngredientIsNotInInventory
 		}
 
 		// Quantity check
-		if ingridient.Quantity < 0 {
-			return ErrNegativeIngridientQuantity
-		} else if ingridient.Quantity == 0 {
-			return ErrZeroIngridientQuantity
+		if ingredient.Quantity < 0 {
+			return ErrNegativeIngredientQuantity
+		} else if ingredient.Quantity == 0 {
+			return ErrZeroIngredientQuantity
 		}
 	}
 	return nil

@@ -17,7 +17,7 @@ import (
 // Errors
 var (
 	ErrInventoryItemDoesntExist   = errors.New("inventory item doesn't exist by provided id")
-	ErrIngridientIDDifferent      = errors.New("incorrect ingridient id provided")
+	ErrIngredientIDDifferent      = errors.New("incorrect ingredient id provided")
 	ErrInventoryItemAlreadyExists = errors.New("item already exists in inventory")
 )
 

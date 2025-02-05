@@ -88,7 +88,7 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 	}
 
 	// Deduct order items
-	err = inventoryRepositoryInstance.deductOrderItemsIngridients(tx, orderID)
+	err = inventoryRepositoryInstance.deductOrderItemsIngredients(tx, orderID)
 	if err != nil {
 		return 0, err
 	}

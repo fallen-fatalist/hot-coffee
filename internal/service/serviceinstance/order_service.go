@@ -34,7 +34,7 @@ var (
 	ErrNoItemsInOrder              = errors.New("order has no items")
 	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
-	ErrNotEnoughIgridient          = errors.New("not enough ingridients")
+	ErrNotEnoughIgredient          = errors.New("not enough ingredients")
 	// OrdersCountByPeriod errors
 	ErrPeriodDayInvalid   = errors.New("incorrect period day provided")
 	ErrPeriodTypeInvalid  = errors.New("incorrect period type provided")
@@ -128,7 +128,7 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 	}
 
 	// if orderDB.Status == "in progress" {
-	// 	if err := validateSufficienceOfIngridients(order); err != nil {
+	// 	if err := validateSufficienceOfIngredients(order); err != nil {
 	// 		return err
 	// 	}
 	// }
@@ -217,32 +217,32 @@ func validateOrder(order entities.Order) error {
 	return nil
 }
 
-// func validateSufficienceOfIngridients(order entities.Order) error {
-// 	ingridients := make(map[string]float64)
+// func validateSufficienceOfIngredients(order entities.Order) error {
+// 	ingredients := make(map[string]float64)
 // 	for _, orderItem := range order.Items {
 // 		menuItem, err := MenuService.GetMenuItem(orderItem.MenuItemID)
 // 		if err != nil {
 // 			return err
 // 		}
-// 		for _, ingridient := range menuItem.Ingredients {
-// 			ingridients[ingridient.IngredientID] += ingridient.Quantity * float64(orderItem.Quantity)
+// 		for _, ingredient := range menuItem.Ingredients {
+// 			ingredients[ingredient.IngredientID] += ingredient.Quantity * float64(orderItem.Quantity)
 // 		}
 // 	}
 
-// 	// Ingridients quantity check
-// 	for ingridientID, quantity := range ingridients {
-// 		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+// 	// Ingredients quantity check
+// 	for ingredientID, quantity := range ingredients {
+// 		inventoryItem, err := InventoryService.GetInventoryItem(ingredientID)
 // 		if err != nil {
 // 			return err
 // 		}
 
 // 		if inventoryItem.Quantity < quantity {
-// 			return fmt.Errorf(ErrNotEnoughIgridient.Error()+": %s", ingridientID)
+// 			return fmt.Errorf(ErrNotEnoughIgridient.Error()+": %s", ingredientID)
 // 		}
 // 	}
 
 // 	deduction after check
-// 	if err := deductInventory(ingridients); err != nil {
+// 	if err := deductInventory(ingredients); err != nil {
 // 		return err
 // 	}
 
@@ -250,23 +250,23 @@ func validateOrder(order entities.Order) error {
 // }
 
 // TODO: MUST BE REPLACED
-// func deductInventory(ingridientsCount map[string]float64) error {
-// 	for ingridientID, quantity := range ingridientsCount {
-// 		inventoryItem, err := InventoryService.GetInventoryItem(ingridientID)
+// func deductInventory(ingredientsCount map[string]float64) error {
+// 	for ingredientID, quantity := range ingredientsCount {
+// 		inventoryItem, err := InventoryService.GetInventoryItem(ingredientID)
 // 		if err != nil {
 // 			return err
 // 		}
 // 		inventoryItem.Quantity -= quantity
-// 		if err := InventoryService.UpdateInventoryItem(ingridientID, inventoryItem); err != nil {
+// 		if err := InventoryService.UpdateInventoryItem(ingredientID, inventoryItem); err != nil {
 // 			return err
 // 		}
 // 	}
 // 	return nil
 // }
 
-func addInventoryTransactions(ingridientsCount map[string]float64) error {
-	for ingridientID, quantity := range ingridientsCount {
-		if err := InventoryService.SaveInventoryTransaction(ingridientID, quantity); err != nil {
+func addInventoryTransactions(ingredientsCount map[string]float64) error {
+	for ingredientID, quantity := range ingredientsCount {
+		if err := InventoryService.SaveInventoryTransaction(ingredientID, quantity); err != nil {
 			return err
 		}
 	}
