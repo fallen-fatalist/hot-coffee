@@ -214,3 +214,64 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 
 	return page, nil
 }
+
+type inventoryCount struct {
+	ingridientID    string
+	ingridientCount float64
+	itemCount       int
+}
+
+func (r *inventoryRepository) deductOrderItemsIngridients(tx *sql.Tx, orderID int64) error {
+	// Part 1 Join Menu Items and their Ingridients
+	// We fetch data to know how many ingridients to deduct
+
+	// DO INDEXATION for query IDs
+	joinQuery := `
+		SELECT
+			mii.inventory_item_id,
+			mii.quantity as ingridient_quantity,
+			oi.quantity as item_count
+		FROM menu_items_ingridients mii
+		JOIN order_items oi USING(menu_item_id)
+		WHERE oi.order_id = $1
+	`
+	menuItemsIngridients := make([]entities.MenuItemIngredient, 0)
+
+	rows, err := tx.Query(joinQuery, orderID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var count inventoryCount
+		if err := rows.Scan(&count.ingridientID, &count.ingridientCount, &count.itemCount); err != nil {
+			tx.Rollback()
+			return err
+		}
+		menuItemsIngridients = append(menuItemsIngridients, entities.MenuItemIngredient{
+			IngredientID: count.ingridientID,
+			Quantity:     count.ingridientCount * float64(count.itemCount),
+		})
+	}
+
+	// Part 2 Deduction part
+	deductQuery := `
+        UPDATE inventory
+		SET  
+			quantity = quantity - $2 
+		WHERE inventory_item_id = $1
+	`
+
+	for _, menuItemIngridient := range menuItemsIngridients {
+		args := []interface{}{menuItemIngridient.IngredientID, menuItemIngridient.Quantity}
+		_, err := tx.Exec(deductQuery, args...)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return nil
+}
