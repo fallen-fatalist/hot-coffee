@@ -31,6 +31,7 @@ CREATE TABLE order_status_history(
 );
 
 
+-- MUST DO: create index for menu_items_id
 CREATE TABLE menu_items(
     menu_item_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -57,6 +58,7 @@ CREATE TABLE price_history(
 
 
 
+-- MUST DO: Create index for inventory_item_id 
 CREATE TABLE inventory(
     inventory_item_id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
