@@ -1,18 +1,21 @@
 package serviceinstance
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
+	"hot-coffee/internal/dto"
 	"hot-coffee/internal/repository"
 	"hot-coffee/internal/utils"
+	"hot-coffee/internal/vo"
 )
 
 // Constants
@@ -81,33 +84,86 @@ func (s *orderService) CreateOrder(order entities.Order) error {
 	return nil
 }
 
-// // Creates order and returns the
-// func (o *orderService) CreateOrders(orders []entities.Order) ([]dto.ProcessedOrder, error) {
-// 	// Concurrect calls of CreateOrder
+// TODO: Must be optimized in future, to reduce the number of database queries during the request execution
+// Creates order concurrently
+func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, error) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	processedOrders := []dto.ProcessedOrder{}
 
-// 	var wg sync.WaitGroup
-// 	for _, order := range orders {
-// 		wg.Add(1)
+	for _, order := range orders {
+		wg.Add(1)
+		go func(order entities.Order) {
+			defer wg.Done()
 
-// 		go func() {
-// 			defer wg.Done()
-// 			o.CreateOrder(order)
-// 			// Handle insufficient inventory
+			var processedOrder dto.ProcessedOrder
+			orderID, err := o.repository.Create(order)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				if _, is := err.(*errors.ErrInsufficientIngredient); is {
+					processedOrder.Reason = "insufficient inventory"
+				} else {
+					processedOrder.Reason = "not handled reason"
+				}
+				processedOrder.Status = "rejected"
+			} else {
+				processedOrder.Status = "accepted"
+			}
+			processedOrder.ID = orderID
+			orderRevenue, err := o.repository.GetOrderRevenue(orderID)
+			if err != nil {
+				slog.Error("Error while calculating revenue for the created order: ", "order_id", orderID)
+				processedOrder.Total = -1
+				processedOrder.Reason = "Error occured while calculating the total revenue"
+			} else {
+				processedOrder.Total = orderRevenue
+			}
+			processedOrders = append(processedOrders, processedOrder)
 
-// 		}()
-// 	}
-// 	wg.Wait()
+		}(order)
+	}
+	wg.Wait()
 
-// 	return nil, nil
-// }
+	response := vo.BatchResponse{
+		ProcessedOrders: processedOrders,
+		Summary: vo.Summary{
+			TotalOrders:      len(processedOrders),
+			Accepted:         0,
+			Rejected:         0,
+			TotalRevenue:     0,
+			InventoryUpdates: []vo.InventoryUpdate{},
+		},
+	}
 
-// MUST DO: Fix empty items field in Order struct
+	for _, order := range processedOrders {
+		if order.Status == "accepted" {
+			response.Summary.Accepted++
+			response.Summary.TotalRevenue += order.Total
+		} else {
+			response.Summary.Rejected++
+		}
+	}
+
+	return response, nil
+
+}
+
 func (s *orderService) GetOrders() ([]entities.Order, error) {
 	return s.repository.GetAll()
 }
 
 func (s *orderService) GetOrder(id string) (entities.Order, error) {
 	return s.repository.GetById(id)
+}
+
+func (s *orderService) GetOrderRevenue(orderIDstr string) (float64, error) {
+	orderID, err := strconv.Atoi(orderIDstr)
+	if err != nil {
+		return 0, errors.NewErrNonIntegerID("order", orderIDstr)
+	}
+
+	return s.repository.GetOrderRevenue(int64(orderID))
 }
 
 func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
@@ -265,14 +321,15 @@ func validateOrder(order entities.Order) error {
 // 	return nil
 // }
 
-func addInventoryTransactions(ingredientsCount map[string]float64) error {
-	for ingredientID, quantity := range ingredientsCount {
-		if err := InventoryService.SaveInventoryTransaction(ingredientID, quantity); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// Not needed in service layer
+// func addInventoryTransactions(ingredientsCount map[string]float64) error {
+// 	for ingredientID, quantity := range ingredientsCount {
+// 		if err := InventoryService.SaveInventoryTransaction(ingredientID, quantity); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
 	var res float64 = 0.0

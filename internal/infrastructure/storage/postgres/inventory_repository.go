@@ -290,7 +290,7 @@ func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID in
 			slog.Error("Error while converting Menu Item Ingredient into integer value:", "Ingredient ID", ingredientID, "error", err.Error())
 			continue
 		}
-		err = r.saveInventoryTransaction(tx, int64(ingredientID), menuItemIngredient.Quantity)
+		err = r.saveInventoryTransaction(tx, int64(ingredientID), -menuItemIngredient.Quantity)
 		if err != nil {
 			tx.Rollback()
 			return err

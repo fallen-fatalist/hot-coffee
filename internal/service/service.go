@@ -2,12 +2,12 @@ package service
 
 import (
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/vo"
 	"time"
 )
 
 type InventoryService interface {
 	CreateInventoryItem(item entities.InventoryItem) error
-	SaveInventoryTransaction(id string, quantity float64) error
 	GetInventoryItems() ([]entities.InventoryItem, error)
 	GetInventoryItem(id string) (entities.InventoryItem, error)
 	UpdateInventoryItem(id string, item entities.InventoryItem) error
@@ -25,8 +25,10 @@ type MenuService interface {
 
 type OrderService interface {
 	CreateOrder(order entities.Order) error
+	CreateOrders(orders []entities.Order) (vo.BatchResponse, error)
 	GetOrders() ([]entities.Order, error)
 	GetOrder(id string) (entities.Order, error)
+	GetOrderRevenue(orderID string) (float64, error)
 	UpdateOrder(id string, order entities.Order) error
 	DeleteOrder(id string) error
 	CloseOrder(id string) error

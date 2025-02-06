@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"log/slog"
 	"os"
 	"strconv"
@@ -72,9 +72,6 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		tx.Rollback()
 		return 0, err
 	}
-	slog.Info("Creating the order: ", "id", orderID)
-
-	// TODO: calculate while inserting number of items
 
 	// Insert order items
 	insertOrderItemQuery := `
@@ -104,11 +101,6 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 	}
 
 	return orderID, nil
-}
-
-func (r *orderRepository) CreateOrders([]entities.Order) error {
-
-	return nil
 }
 
 func (r *orderRepository) GetAll() ([]entities.Order, error) {
@@ -249,6 +241,31 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 		return order, sql.ErrNoRows
 	}
 	return order, nil
+}
+
+func (r *orderRepository) GetOrderRevenue(orderID int64) (totalOrderRevenue float64, err error) {
+	// Common table expression query
+	query := `
+		WITH payment AS (
+ 	   		SELECT SUM(mi.price * oi.quantity) AS paymentSum
+ 	   		FROM order_items oi
+ 	   		JOIN menu_items mi USING(menu_item_id)
+ 	   		WHERE oi.order_id = $1
+		),
+		first_cost AS (
+		    SELECT SUM(oi.quantity * mii.quantity * i.price) AS firstCost
+		    FROM order_items oi 
+		    JOIN menu_items_ingredients mii USING(menu_item_id)
+		    JOIN inventory i USING(inventory_item_id)
+		    WHERE oi.order_id = $1
+		)
+		SELECT p.paymentSum - fc.firstCost AS total_revenue
+		FROM payment p, first_cost fc
+	`
+
+	err = r.db.QueryRow(query, orderID).Scan(&totalOrderRevenue)
+	return totalOrderRevenue, err
+
 }
 
 func (r *orderRepository) Update(idStr string, order entities.Order) error {
