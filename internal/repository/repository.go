@@ -7,7 +7,6 @@ import (
 
 type InventoryRepository interface {
 	Create(item entities.InventoryItem) error
-	SaveInventoryTransaction(id string, quantity float64) error
 	GetAll() ([]entities.InventoryItem, error)
 	GetById(id string) (entities.InventoryItem, error)
 	Update(id string, item entities.InventoryItem) error
@@ -30,6 +29,7 @@ type OrderRepository interface {
 	SetOrderStatusHistory(id int64, pastStatus, newStatus string) error
 	GetAll() ([]entities.Order, error)
 	GetById(id string) (entities.Order, error)
+	GetOrderRevenue(id int64) (float64, error)
 	Update(id string, order entities.Order) error
 	Delete(id string) error
 	GetOrderedItemsCountByPeriod(period, month string, year int) (map[string]int, error)
