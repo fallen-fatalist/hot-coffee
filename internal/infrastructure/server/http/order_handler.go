@@ -50,6 +50,8 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 // Route: /orders/<id>
+
+// MUST DO: Handle no rows in result set, not found IDs for orders, menu and inventory items
 func HandleOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
