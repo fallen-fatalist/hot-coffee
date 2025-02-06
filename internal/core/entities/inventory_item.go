@@ -1,5 +1,6 @@
 package entities
 
+// TODO: Convert all IDs into int64
 type InventoryItem struct {
 	IngredientID string  `json:"ingredient_id"`
 	Name         string  `json:"name"`

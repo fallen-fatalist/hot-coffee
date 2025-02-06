@@ -1,5 +1,6 @@
 package entities
 
+// TODO: Convert all IDs into int64
 type MenuItem struct {
 	ID          string               `json:"product_id"`
 	Name        string               `json:"name"`

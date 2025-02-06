@@ -1,5 +1,6 @@
 package entities
 
+// TODO: Convert all IDs into int64
 type Order struct {
 	ID           string      `json:"order_id,omitempty"`
 	CustomerName string      `json:"customer_name"`
