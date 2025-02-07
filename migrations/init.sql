@@ -81,9 +81,11 @@ CREATE TABLE units(
 
 CREATE TABLE inventory_transactions(
     inventory_item_id INTEGER NOT NULL,
+    order_id INTEGER NOT NULL,
     transaction_quantity DECIMAL(10, 5) NOT NULL CONSTRAINT not_the_same CHECK (transaction_quantity != 0),
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
 );
 
 
@@ -239,40 +241,40 @@ INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) V
 
 
 -- Insert mock inventory transactions (usage and restock events)
-INSERT INTO inventory_transactions (inventory_item_id, transaction_quantity) VALUES
-(1, -40),  -- 40 grams of Espresso Beans used
-(2, -2000),  -- 2000 ml of Whole Milk used
-(3, -800),  -- 800 ml of Almond Milk used
-(4, -1000),  -- 1000 grams of Flour used
-(5, -600),   -- 600 grams of Sugar used
-(6, -300),   -- 300 grams of Butter used
-(7, -300),   -- 300 grams of Blueberries used
-(8, -1000),  -- 1000 grams of Chocolate Chips used
-(9, -500),   -- 500 grams of Cream Cheese used
-(10, -200),  -- 200 grams of Whipped Cream used
-(11, -100),  -- 100 ml of Vanilla Extract used
-(12, -500),  -- 500 grams of Graham Crackers used
-(13, -200),  -- 200 grams of Mascarpone Cheese used
-(14, -100),  -- 100 grams of Cocoa Powder used
-(15, -200);  -- 200 ml of Coffee Syrup used
+INSERT INTO inventory_transactions (inventory_item_id, order_id, transaction_quantity) VALUES
+(1, 1, -40),  -- 40 grams of Espresso Beans used
+(2, 1, -2000),  -- 2000 ml of Whole Milk used
+(3, 1, -800),  -- 800 ml of Almond Milk used
+(4, 1, -1000),  -- 1000 grams of Flour used
+(5, 1, -600),   -- 600 grams of Sugar used
+(6, 1, -300),   -- 300 grams of Butter used
+(7, 1, -300),   -- 300 grams of Blueberries used
+(8, 1, -1000),  -- 1000 grams of Chocolate Chips used
+(9, 1, -500),   -- 500 grams of Cream Cheese used
+(10, 1, -200),  -- 200 grams of Whipped Cream used
+(11, 1, -100),  -- 100 ml of Vanilla Extract used
+(12, 1, -500),  -- 500 grams of Graham Crackers used
+(13, 1, -200),  -- 200 grams of Mascarpone Cheese used
+(14, 1, -100),  -- 100 grams of Cocoa Powder used
+(15, 1, -200);  -- 200 ml of Coffee Syrup used
 
 -- Restocking inventory items
-INSERT INTO inventory_transactions (inventory_item_id, transaction_quantity) VALUES
-(1, 1000),  -- Restocking Espresso Beans
-(2, 2000),  -- Restocking Whole Milk
-(3, 1000),  -- Restocking Almond Milk
-(4, 3000),  -- Restocking Flour
-(5, 1000),  -- Restocking Sugar
-(6, 500),   -- Restocking Butter
-(7, 500),   -- Restocking Blueberries
-(8, 1500),  -- Restocking Chocolate Chips
-(9, 700),   -- Restocking Cream Cheese
-(10, 300),  -- Restocking Whipped Cream
-(11, 300),  -- Restocking Vanilla Extract
-(12, 1500), -- Restocking Graham Crackers
-(13, 700),  -- Restocking Mascarpone Cheese
-(14, 400),  -- Restocking Cocoa Powder
-(15, 300);  -- Restocking Coffee Syrup
+INSERT INTO inventory_transactions (inventory_item_id, order_id, transaction_quantity) VALUES
+(1, 2, 1000),  -- Restocking Espresso Beans
+(2, 2, 2000),  -- Restocking Whole Milk
+(3, 2, 1000),  -- Restocking Almond Milk
+(4, 2, 3000),  -- Restocking Flour
+(5, 2, 1000),  -- Restocking Sugar
+(6, 2, 500),   -- Restocking Butter
+(7, 2, 500),   -- Restocking Blueberries
+(8, 2, 1500),  -- Restocking Chocolate Chips
+(9, 2, 700),   -- Restocking Cream Cheese
+(10, 2, 300),  -- Restocking Whipped Cream
+(11, 2, 300),  -- Restocking Vanilla Extract
+(12, 2, 1500), -- Restocking Graham Crackers
+(13, 2, 700),  -- Restocking Mascarpone Cheese
+(14, 2, 400),  -- Restocking Cocoa Powder
+(15, 2, 300);  -- Restocking Coffee Syrup
 
 -- Insert mock order items (menu item ID, order ID, quantity, customization info) expanded
 INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) VALUES
@@ -339,12 +341,12 @@ INSERT INTO price_history (menu_item_id, price_difference) VALUES
 (5, 1);  -- New menu item
 
 -- Insert mock inventory transactions (expanded with more items used)
-INSERT INTO inventory_transactions (inventory_item_id, transaction_quantity) VALUES
-(1, -40),  -- 40 Espresso Shots used for orders
-(2, -2000), -- 2000ml of milk used for orders
-(3, -1000),  -- 1000g of flour used for orders
-(4, -300),  -- 300g of blueberries used for orders
-(5, 600);   -- 600g of sugar restocked
+INSERT INTO inventory_transactions (inventory_item_id, order_id, transaction_quantity) VALUES
+(1, 1, -40),  -- 40 Espresso Shots used for orders
+(2, 1, -2000), -- 2000ml of milk used for orders
+(3, 1, -1000),  -- 1000g of flour used for orders
+(4, 1, -300),  -- 300g of blueberries used for orders
+(5, 1, 600);   -- 600g of sugar restocked
 
 
 

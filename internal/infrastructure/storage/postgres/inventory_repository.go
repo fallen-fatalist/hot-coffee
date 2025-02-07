@@ -136,12 +136,12 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
 
 }
 
-func (r *inventoryRepository) saveInventoryTransaction(tx *sql.Tx, productID int64, quantity float64) error {
+func (r *inventoryRepository) saveInventoryTransaction(tx *sql.Tx, productID int64, orderID int64, quantity float64) error {
 	query := `
-	INSERT INTO inventory_transactions(inventory_item_id, transaction_quantity)
-	VALUES ($1, $2)
+	INSERT INTO inventory_transactions(inventory_item_id, order_id, transaction_quantity)
+	VALUES ($1, $2, $3)
 	`
-	args := []interface{}{productID, quantity}
+	args := []interface{}{productID, orderID, quantity}
 
 	_, err := tx.Exec(query, args...)
 	if err != nil {
@@ -290,7 +290,7 @@ func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID in
 			slog.Error("Error while converting Menu Item Ingredient into integer value:", "Ingredient ID", ingredientID, "error", err.Error())
 			continue
 		}
-		err = r.saveInventoryTransaction(tx, int64(ingredientID), -menuItemIngredient.Quantity)
+		err = r.saveInventoryTransaction(tx, int64(ingredientID), orderID, -menuItemIngredient.Quantity)
 		if err != nil {
 			tx.Rollback()
 			return err
