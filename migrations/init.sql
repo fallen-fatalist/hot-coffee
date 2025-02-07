@@ -36,13 +36,13 @@ CREATE TABLE menu_items(
     menu_item_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     description TEXT NOT NULL, 
-    price DECIMAL(10,2) NOT NULL CONSTRAINT positive_price CHECK (price > 0)
+    price NUMERIC NOT NULL CONSTRAINT positive_price CHECK (price > 0)
 );
 
 CREATE TABLE order_items(
     menu_item_id INTEGER NOT NULL, 
     order_id INTEGER NOT NULL,
-    quantity DECIMAL(10, 5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
+    quantity NUMERIC NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
     customization_info TEXT NOT NULL,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE,
@@ -62,15 +62,15 @@ CREATE TABLE price_history(
 CREATE TABLE inventory(
     inventory_item_id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL CONSTRAINT positive_price CHECK (price > 0),
-    quantity DECIMAL(10,5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity >= 0),
+    price NUMERIC NOT NULL CONSTRAINT positive_price CHECK (price > 0),
+    quantity NUMERIC NOT NULL CONSTRAINT positive_quantity CHECK (quantity >= 0),
     unit VARCHAR(20)
 );
 
 CREATE TABLE menu_items_ingredients(
     menu_item_id INTEGER NOT NULL,
     inventory_item_id INTEGER NOT NULL,
-    quantity DECIMAL(10, 5) NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
+    quantity NUMERIC NOT NULL CONSTRAINT positive_quantity CHECK (quantity > 0),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (menu_item_id) ON DELETE CASCADE,
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE
 );
@@ -82,7 +82,7 @@ CREATE TABLE units(
 CREATE TABLE inventory_transactions(
     inventory_item_id INTEGER NOT NULL,
     order_id INTEGER NOT NULL,
-    transaction_quantity DECIMAL(10, 5) NOT NULL CONSTRAINT not_the_same CHECK (transaction_quantity != 0),
+    transaction_quantity NUMERIC NOT NULL CONSTRAINT not_the_same CHECK (transaction_quantity != 0),
     changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     FOREIGN KEY (inventory_item_id) REFERENCES inventory (inventory_item_id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES orders (order_id) ON DELETE CASCADE
@@ -157,55 +157,58 @@ INSERT INTO orders (customer_id, status, created_at) VALUES
 (6, 'closed', '2023-12-10 15:35:15');
 
 
--- Insert mock menu items
+-- Adjusted menu item prices
 INSERT INTO menu_items (name, description, price) VALUES
-('Espresso', 'Strong black coffee made by forcing steam through finely ground coffee beans.', 2.50),
-('Latte', 'Espresso with steamed milk and a layer of foam.', 3.50),
-('Cappuccino', 'Espresso with steamed milk and foam, topped with chocolate powder.', 3.75),
-('Americano', 'Espresso diluted with hot water, creating a smooth and strong coffee.', 2.75),
-('Flat White', 'Espresso with steamed milk, very little foam, smoother than a latte.', 3.25),
-('Mocha', 'Espresso with chocolate syrup and steamed milk, topped with whipped cream.', 4.00),
-('Croissant', 'Flaky, buttery pastry, perfect for a snack.', 2.00),
-('Muffin', 'A soft, sweet baked good, with various flavors available.', 2.50),
-('Blueberry Muffin', 'Muffin with fresh blueberries inside.', 3.00),
-('Chocolate Chip Cookie', 'A sweet and chewy cookie filled with chocolate chips.', 1.50),
-('Bagel', 'Boiled and baked dough, served with cream cheese or toppings of your choice.', 2.75),
-('Cheesecake', 'Creamy, rich dessert with a graham cracker crust and a smooth topping.', 5.00),
-('Tiramisu', 'Italian dessert with layers of coffee-soaked biscuits and mascarpone cream.', 5.50),
-('Chocolate Cake', 'Rich and moist cake topped with chocolate frosting.', 4.25),
-('Vanilla Cupcake', 'Light and fluffy cake with vanilla frosting on top.', 2.00);
+('Espresso', 'Strong black coffee made by forcing steam through finely ground coffee beans.', 3.00),
+('Latte', 'Espresso with steamed milk and a layer of foam.', 4.50),
+('Cappuccino', 'Espresso with steamed milk and foam, topped with chocolate powder.', 4.75),
+('Americano', 'Espresso diluted with hot water, creating a smooth and strong coffee.', 3.50),
+('Flat White', 'Espresso with steamed milk, very little foam, smoother than a latte.', 4.25),
+('Mocha', 'Espresso with chocolate syrup and steamed milk, topped with whipped cream.', 5.50),
+('Croissant', 'Flaky, buttery pastry, perfect for a snack.', 3.50),
+('Muffin', 'A soft, sweet baked good, with various flavors available.', 3.75),
+('Blueberry Muffin', 'Muffin with fresh blueberries inside.', 4.25),
+('Chocolate Chip Cookie', 'A sweet and chewy cookie filled with chocolate chips.', 2.50),
+('Bagel', 'Boiled and baked dough, served with cream cheese or toppings of your choice.', 3.75),
+('Cheesecake', 'Creamy, rich dessert with a graham cracker crust and a smooth topping.', 6.50),
+('Tiramisu', 'Italian dessert with layers of coffee-soaked biscuits and mascarpone cream.', 7.00),
+('Chocolate Cake', 'Rich and moist cake topped with chocolate frosting.', 5.50),
+('Vanilla Cupcake', 'Light and fluffy cake with vanilla frosting on top.', 3.50);
 
+
+-- TODO: Divide the quantity and information parts in different tables 
 -- Insert mock inventory items
 INSERT INTO inventory (name, unit, quantity, price) VALUES
-('Espresso Beans', 'grams', 5000, 30),
-('Whole Milk', 'liters', 100, 100),
-('Almond Milk', 'liters', 50, 50),
-('Flour', 'grams', 3000, 70),
-('Sugar', 'grams', 2000, 10),
-('Butter', 'grams', 1000, 40),
-('Blueberries', 'grams', 800, 20),
-('Chocolate Chips', 'grams', 1200, 60),
-('Cream Cheese', 'grams', 600, 40),
-('Whipped Cream', 'grams', 400, 50),
-('Vanilla Extract', 'ml', 200, 60),
-('Graham Crackers', 'grams', 1000, 30),
-('Mascarpone Cheese', 'grams', 500, 20),
-('Cocoa Powder', 'grams', 300, 15),
-('Coffee Syrup', 'ml', 500, 30);
+('Espresso Beans', 'grams', 10000, 0.04),  -- ~$40 per kg
+('Whole Milk', 'liters', 100, 1.20),       -- ~$1.20 per liter
+('Almond Milk', 'liters', 50, 2.50),       -- ~$2.50 per liter
+('Flour', 'grams', 10000, 0.002),          -- ~$2 per kg
+('Sugar', 'grams', 10000, 0.003),          -- ~$3 per kg
+('Butter', 'grams', 4000, 0.01),           -- ~$10 per kg
+('Blueberries', 'grams', 3000, 0.02),      -- ~$20 per kg
+('Chocolate Chips', 'grams', 3000, 0.015), -- ~$15 per kg
+('Cream Cheese', 'grams', 2000, 0.012),    -- ~$12 per kg
+('Whipped Cream', 'grams', 2000, 0.015),   -- ~$15 per kg
+('Vanilla Extract', 'ml', 2000, 0.10),     -- ~$100 per liter
+('Graham Crackers', 'grams', 1000, 0.015), -- ~$15 per kg
+('Mascarpone Cheese', 'grams', 2000, 0.02),-- ~$20 per kg
+('Cocoa Powder', 'grams', 1000, 0.025),    -- ~$25 per kg
+('Coffee Syrup', 'ml', 1000, 0.08);        -- ~$80 per liter
+
 
 -- Insert mock menu item ingredients
 INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) VALUES
 (1, 1, 18),  -- Espresso: 18g of Espresso Beans per shot
 (2, 1, 18),  -- Latte: 18g of Espresso Beans
-(2, 2, 200),  -- Latte: 200ml of Whole Milk
+(2, 2, 0.2),  -- Latte: 200ml of Whole Milk
 (3, 1, 18),  -- Cappuccino: 18g of Espresso Beans
-(3, 2, 150),  -- Cappuccino: 150ml of Whole Milk
+(3, 2, 0.150),  -- Cappuccino: 150ml of Whole Milk
 (3, 14, 5),  -- Cappuccino: 5g of Cocoa Powder
 (4, 1, 18),  -- Americano: 18g of Espresso Beans
 (5, 1, 18),  -- Flat White: 18g of Espresso Beans
-(5, 2, 180),  -- Flat White: 180ml of Whole Milk
+(5, 2, 0.18),  -- Flat White: 180ml of Whole Milk
 (6, 1, 18),  -- Mocha: 18g of Espresso Beans
-(6, 2, 150),  -- Mocha: 150ml of Whole Milk
+(6, 2, 0.15),  -- Mocha: 150ml of Whole Milk
 (6, 8, 30),  -- Mocha: 30g of Chocolate Chips
 (6, 10, 20),  -- Mocha: 20g of Whipped Cream
 (7, 4, 100),  -- Croissant: 100g of Flour
@@ -231,7 +234,7 @@ INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity) V
 (13, 14, 10),  -- Tiramisu: 10g of Cocoa Powder
 (13, 15, 50),  -- Tiramisu: 50ml of Coffee Syrup
 (14, 8, 50),  -- Chocolate Cake: 50g of Chocolate Chips
-(14, 4, 120),  -- Chocolate Cake: 120g of Flour
+(14, 4, 120), -- Chocolate Cake: 120g of Flour
 (14, 5, 40),  -- Chocolate Cake: 40g of Sugar
 (14, 6, 30),  -- Chocolate Cake: 30g of Butter
 (15, 4, 100),  -- Vanilla Cupcake: 100g of Flour
