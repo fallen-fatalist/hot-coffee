@@ -63,14 +63,14 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 
 	row := tx.QueryRow(insertOrderQuery, order.CustomerID, order.Status)
 	if row.Err() != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to inserting new order: %w", row.Err())
 	}
 
 	var orderID int64
 	err = row.Scan(&orderID)
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, fmt.Errorf("failed to scan order ID from row: %w", err)
 	}
 
 	// Insert order items
@@ -83,21 +83,21 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		_, err = tx.Exec(insertOrderItemQuery, item.ProductID, orderID, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
-			return 0, err
+			return 0, fmt.Errorf("failed to insert order item: %w", err)
 		}
 	}
 
 	// Deduct order items
 	err = inventoryRepositoryInstance.deductOrderItemsIngredients(tx, orderID)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to deduct order items ingredients: %w", err)
 	}
 
 	// Commit transaction if all succeeds
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return -1, err
+		return 0, fmt.Errorf("failed to commit transaction after order creation: %w", err)
 	}
 
 	return orderID, nil
@@ -106,14 +106,12 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 func (r *orderRepository) GetAll() ([]entities.Order, error) {
 	query := `
 	SELECT 	
-		o.order_id, o.customer_id, o.status, o.created_at,
+		o.order_id, c.fullname, o.status, o.created_at,
 		oi.menu_item_id, oi.quantity, oi.customization_info
 	FROM
 		orders o
-	LEFT JOIN
-		order_items oi
-	ON 
-		o.order_id = oi.order_id
+	LEFT JOIN order_items oi USING(order_id)
+	JOIN customers c USING(customer_id)
 	`
 
 	rows, err := r.db.Query(query)
@@ -131,12 +129,12 @@ func (r *orderRepository) GetAll() ([]entities.Order, error) {
 			customerID        string
 			status            string
 			createdAt         string
-			menuItemID        sql.NullString
+			menuItemIDString  sql.NullString
 			quantity          sql.NullFloat64
 			customizationInfo sql.NullString
 		)
 
-		if err := rows.Scan(&orderItemID, &customerID, &status, &createdAt, &menuItemID, &quantity, &customizationInfo); err != nil {
+		if err := rows.Scan(&orderItemID, &customerID, &status, &createdAt, &menuItemIDString, &quantity, &customizationInfo); err != nil {
 			return nil, err
 		}
 
@@ -154,9 +152,11 @@ func (r *orderRepository) GetAll() ([]entities.Order, error) {
 			}
 		}
 
-		if menuItemID.Valid && quantity.Valid && customizationInfo.Valid {
+		menuItemID, _ := strconv.Atoi(menuItemIDString.String)
+
+		if menuItemIDString.Valid && quantity.Valid && customizationInfo.Valid {
 			currentItem.Items = append(currentItem.Items, entities.OrderItem{
-				ProductID:         menuItemID.String,
+				ProductID:         menuItemID,
 				Quantity:          int(quantity.Float64),
 				CustomizationInfo: customizationInfo.String,
 			})
@@ -223,9 +223,12 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 			order.Status = status
 			order.CreatedAt = createdAt
 		}
+
+		menuItemIDInteger, _ := strconv.Atoi(menuItemID.String)
+
 		if menuItemID.Valid && quantity.Valid && customizationInfo.Valid {
 			order.Items = append(order.Items, entities.OrderItem{
-				ProductID:         menuItemID.String,
+				ProductID:         menuItemIDInteger,
 				Quantity:          int(quantity.Float64),
 				CustomizationInfo: customizationInfo.String,
 			})
@@ -556,10 +559,10 @@ func (r *orderRepository) GetCustomerIDByName(fullname string, phone string) (in
 	if err == sql.ErrNoRows {
 		insertQuery := `
 			INSERT INTO customers 
-				(fullname, phone)
+				(fullname)
 			VALUES 
-				($1, $2)
-			RETURNING customer_id
+				($1)
+			RETURNING customer_idd
 		`
 		row := r.db.QueryRow(insertQuery, fullname, phone)
 		if row.Err() != nil {
