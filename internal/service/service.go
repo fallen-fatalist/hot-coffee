@@ -24,7 +24,7 @@ type MenuService interface {
 }
 
 type OrderService interface {
-	CreateOrder(order entities.Order) error
+	CreateOrder(order entities.Order) (int64, error)
 	CreateOrders(orders []entities.Order) (vo.BatchResponse, error)
 	GetOrders() ([]entities.Order, error)
 	GetOrder(id string) (entities.Order, error)

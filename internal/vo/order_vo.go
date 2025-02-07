@@ -4,6 +4,10 @@ import "hot-coffee/internal/dto"
 
 // view object
 
+type Response struct {
+	Message string `json:"message"`
+}
+
 type BatchResponse struct {
 	ProcessedOrders []dto.ProcessedOrder `json:"processed_orders"`
 	Summary         Summary              `json:"summary"`

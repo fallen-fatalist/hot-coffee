@@ -11,6 +11,8 @@ type errorEnveloper struct {
 	Err string `json:"error"`
 }
 
+// TODO: Move error handling from this helper to handlers
+// TODO: Move error logging to another place
 func jsonErrorRespond(w http.ResponseWriter, err error, statusCode int) {
 	if statusCode == 0 {
 		w.WriteHeader(http.StatusBadRequest)

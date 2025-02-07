@@ -58,35 +58,46 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 	return &orderService{repository}
 }
 
-func (s *orderService) CreateOrder(order entities.Order) error {
+func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 	order.Status = OpenStatus
 	if err := validateOrder(order); err != nil {
-		return err
+		return 0, err
 	}
 
 	// Fetch customer customer_id
 	customerID, err := s.repository.GetCustomerIDByName(order.CustomerName, "")
 	if err != nil {
-		return fmt.Errorf("error while fetching the customer name: %w", err)
+		return 0, fmt.Errorf("error while fetching the customer name: %w", err)
 	}
 	order.CustomerID = customerID
 
 	orderID, err := s.repository.Create(order)
 	if err != nil {
-		return err
+		return 0, fmt.Errorf("failed to create order in repository: %w", err)
 	}
 
 	err = s.repository.SetOrderStatusHistory(orderID, "", order.Status)
 	if err != nil {
-		return err
+		return 0, fmt.Errorf("failed to save order status history: %w", err)
 	}
 
-	return nil
+	return orderID, nil
 }
 
 // TODO: Must be optimized in future, to reduce the number of database queries during the request execution
+// MUST DO: Add inventory updates to Batch response
 // Creates order concurrently
 func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, error) {
+	response := vo.BatchResponse{
+		ProcessedOrders: nil,
+		Summary: vo.Summary{
+			TotalOrders:      0,
+			Accepted:         0,
+			Rejected:         0,
+			TotalRevenue:     0,
+			InventoryUpdates: nil,
+		},
+	}
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	processedOrders := []dto.ProcessedOrder{}
@@ -97,44 +108,46 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 			defer wg.Done()
 
 			var processedOrder dto.ProcessedOrder
-			orderID, err := o.repository.Create(order)
+			orderID, err := o.CreateOrder(order)
 			mu.Lock()
 			defer mu.Unlock()
+
 			if err != nil {
 				if _, is := err.(*errors.ErrInsufficientIngredient); is {
 					processedOrder.Reason = "insufficient inventory"
 				} else {
-					processedOrder.Reason = "not handled reason"
+					processedOrder.Reason = "failed to create order due to unhandled errors"
 				}
 				processedOrder.Status = "rejected"
+				slog.Error("Error while creating the order: ", "error", err.Error())
 			} else {
+
+				slog.Info("Created order", "order_id", order.ID)
+				order.ID = strconv.Itoa(int(orderID))
 				processedOrder.Status = "accepted"
+				orderRevenue, err := o.repository.GetOrderRevenue(orderID)
+				if err != nil {
+					slog.Error("Error while calculating revenue for the created order: ", "order_id", orderID)
+					processedOrder.Total = -1
+					processedOrder.Reason = "Error occured while calculating the total revenue"
+				} else {
+					processedOrder.Total = orderRevenue
+				}
 			}
 			processedOrder.ID = orderID
-			orderRevenue, err := o.repository.GetOrderRevenue(orderID)
-			if err != nil {
-				slog.Error("Error while calculating revenue for the created order: ", "order_id", orderID)
-				processedOrder.Total = -1
-				processedOrder.Reason = "Error occured while calculating the total revenue"
-			} else {
-				processedOrder.Total = orderRevenue
-			}
 			processedOrders = append(processedOrders, processedOrder)
 
 		}(order)
 	}
+
+	if len(processedOrders) != len(orders) {
+		slog.Error("Incorrect number of orders processed:", "number of processed orders", len(processedOrders), "number of orders provided to process", len(orders))
+	}
+
 	wg.Wait()
 
-	response := vo.BatchResponse{
-		ProcessedOrders: processedOrders,
-		Summary: vo.Summary{
-			TotalOrders:      len(processedOrders),
-			Accepted:         0,
-			Rejected:         0,
-			TotalRevenue:     0,
-			InventoryUpdates: []vo.InventoryUpdate{},
-		},
-	}
+	response.ProcessedOrders = processedOrders
+	response.Summary.TotalOrders = len(processedOrders)
 
 	for _, order := range processedOrders {
 		if order.Status == "accepted" {
@@ -256,9 +269,10 @@ func validateOrder(order entities.Order) error {
 	if err != nil {
 		return err
 	}
-	menuItemsList := make(map[string]bool)
+	menuItemsList := make(map[int]bool)
 	for _, menuItem := range menuItems {
-		menuItemsList[menuItem.ID] = true
+		menuItemID, _ := strconv.Atoi(menuItem.ID)
+		menuItemsList[menuItemID] = true
 	}
 
 	// Products validation
@@ -341,7 +355,8 @@ func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
 	for _, order := range orders {
 		if order.Status == ClosedStatus {
 			for _, orderItem := range order.Items {
-				menuItem, err := MenuService.GetMenuItem(orderItem.ProductID)
+				productID := strconv.Itoa(orderItem.ProductID)
+				menuItem, err := MenuService.GetMenuItem(productID)
 				if err != nil {
 					return entities.TotalSales{}, err
 				}
@@ -360,7 +375,7 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 		return nil, err
 	}
 
-	itemSalesCount := make(map[string]int)
+	itemSalesCount := make(map[int]int)
 
 	for _, order := range orders {
 		if order.Status == ClosedStatus {
@@ -372,13 +387,14 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 
 	itemsSalesCount := make(entities.MenuItemSalesByCount, 0, len(itemSalesCount))
 	for menuItemID, salesCount := range itemSalesCount {
-		menuItem, err := MenuService.GetMenuItem(menuItemID)
+		menuItemIDString := strconv.Itoa(menuItemID)
+		menuItem, err := MenuService.GetMenuItem(menuItemIDString)
 		if err != nil {
 			return nil, err
 		}
 
 		itemsSalesCount = append(itemsSalesCount, entities.MenuItemSales{
-			ProductID:   menuItemID,
+			ProductID:   menuItemIDString,
 			ProductName: menuItem.Name,
 			SalesCount:  salesCount,
 		})

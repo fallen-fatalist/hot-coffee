@@ -2,10 +2,13 @@ package httpserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"hot-coffee/internal/service/serviceinstance"
+	"hot-coffee/internal/vo"
 )
 
 // Route: /orders
@@ -35,11 +38,21 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = serviceinstance.OrderService.CreateOrder(order)
+		orderID, err := serviceinstance.OrderService.CreateOrder(order)
 		if err != nil {
 			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
+
+		json, err := json.Marshal(vo.Response{
+			Message: fmt.Sprintf("Created order with id: %d", orderID),
+		})
+		if err != nil {
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(json)
 		w.WriteHeader(http.StatusCreated)
 		return
 	default:
@@ -154,21 +167,27 @@ type batchRequest struct {
 func HandleBatchOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method == "POST" {
-
 		// Request Body  Parsing \\
 		var req batchRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
+			jsonErrorRespond(w, errors.ErrIncorrectRequest, http.StatusBadRequest)
 			return
 		}
 
 		// Service Call \\
-		// _, err := serviceinstance.OrderService.CreateOrders(req.Orders)
-		// if err != nil {
-		// 	JSONErrorRespond(w, err, http.StatusInternalServerError)
-		// 	return
-		// }
+		response, err := serviceinstance.OrderService.CreateOrders(req.Orders)
+		if err != nil {
+			jsonErrorRespond(w, err, http.StatusBadRequest)
+			return
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
 
+		// Response \\
+		w.Write(json)
 		w.WriteHeader(http.StatusCreated)
 		return
 	} else {

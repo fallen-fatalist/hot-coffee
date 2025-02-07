@@ -20,6 +20,11 @@ func Is(err error, target error) bool {
 // TODO: Add more error types
 // TODO: Add more context to errors
 
+// Errors
+var (
+	ErrIncorrectRequest = New("incorrect request provided")
+)
+
 type ErrInsufficientIngredient struct {
 	insufficientIngredientID string
 }
