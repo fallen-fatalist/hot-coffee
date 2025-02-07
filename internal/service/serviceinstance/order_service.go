@@ -109,54 +109,48 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 
 			var processedOrder dto.ProcessedOrder
 			orderID, err := o.CreateOrder(order)
+
 			mu.Lock()
 			defer mu.Unlock()
 
 			if err != nil {
-				if _, is := err.(*errors.ErrInsufficientIngredient); is {
+				var errInsufficientIngredient *errors.ErrInsufficientIngredient
+				if errors.As(err, &errInsufficientIngredient) {
 					processedOrder.Reason = "insufficient inventory"
 				} else {
 					processedOrder.Reason = "failed to create order due to unhandled errors"
 				}
 				processedOrder.Status = "rejected"
+				response.Summary.Rejected++
 				slog.Error("Error while creating the order: ", "error", err.Error())
 			} else {
-
-				slog.Info("Created order", "order_id", order.ID)
 				order.ID = strconv.Itoa(int(orderID))
 				processedOrder.Status = "accepted"
+				response.Summary.Accepted++
 				orderRevenue, err := o.repository.GetOrderRevenue(orderID)
 				if err != nil {
 					slog.Error("Error while calculating revenue for the created order: ", "order_id", orderID)
-					processedOrder.Total = -1
+					processedOrder.Total = 0
 					processedOrder.Reason = "Error occured while calculating the total revenue"
 				} else {
 					processedOrder.Total = orderRevenue
+					response.Summary.TotalRevenue += orderRevenue
 				}
 			}
 			processedOrder.ID = orderID
+			processedOrder.CustomerName = order.CustomerName
 			processedOrders = append(processedOrders, processedOrder)
 
 		}(order)
 	}
 
+	wg.Wait()
+
 	if len(processedOrders) != len(orders) {
 		slog.Error("Incorrect number of orders processed:", "number of processed orders", len(processedOrders), "number of orders provided to process", len(orders))
 	}
-
-	wg.Wait()
-
 	response.ProcessedOrders = processedOrders
 	response.Summary.TotalOrders = len(processedOrders)
-
-	for _, order := range processedOrders {
-		if order.Status == "accepted" {
-			response.Summary.Accepted++
-			response.Summary.TotalRevenue += order.Total
-		} else {
-			response.Summary.Rejected++
-		}
-	}
 
 	return response, nil
 
