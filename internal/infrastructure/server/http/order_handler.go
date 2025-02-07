@@ -187,8 +187,8 @@ func HandleBatchOrders(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Response \\
-		w.Write(json)
 		w.WriteHeader(http.StatusCreated)
+		w.Write(json)
 		return
 	} else {
 		w.Header().Set("Allow", "POST")
