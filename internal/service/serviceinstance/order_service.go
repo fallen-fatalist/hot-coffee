@@ -18,15 +18,6 @@ import (
 	"hot-coffee/internal/vo"
 )
 
-// Constants
-const (
-	OpenStatus       = "open"
-	ClosedStatus     = "closed"
-	InProgressStatus = "in progress"
-)
-
-var statuses = []string{OpenStatus, ClosedStatus, InProgressStatus}
-
 // Errors
 var (
 	ErrEmptyCustomerName           = errors.New("empty customer name provided in order")
@@ -59,7 +50,7 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 }
 
 func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
-	order.Status = OpenStatus
+	order.Status = entities.OpenStatus
 	if err := validateOrder(order); err != nil {
 		return 0, err
 	}
@@ -244,7 +235,7 @@ func (s *orderService) SetInProgress(id string) error {
 	if err != nil {
 		return err
 	}
-	order.Status = ClosedStatus
+	order.Status = entities.ClosedStatus
 	return s.repository.Update(id, order)
 
 }
@@ -252,7 +243,7 @@ func (s *orderService) SetInProgress(id string) error {
 func validateOrder(order entities.Order) error {
 	if order.CustomerName == "" {
 		return ErrEmptyCustomerName
-	} else if !utils.In(order.Status, statuses) {
+	} else if !utils.In(order.Status, entities.Statuses) {
 		return ErrIncorrectOrderStatus
 	} else if len(order.Items) == 0 {
 		return ErrNoItemsInOrder
@@ -347,7 +338,7 @@ func (o *orderService) GetTotalSales() (entities.TotalSales, error) {
 	}
 
 	for _, order := range orders {
-		if order.Status == ClosedStatus {
+		if order.Status == entities.ClosedStatus {
 			for _, orderItem := range order.Items {
 				productID := strconv.Itoa(orderItem.ProductID)
 				menuItem, err := MenuService.GetMenuItem(productID)
@@ -372,7 +363,7 @@ func (o *orderService) GetPopularMenuItems() ([]entities.MenuItemSales, error) {
 	itemSalesCount := make(map[int]int)
 
 	for _, order := range orders {
-		if order.Status == ClosedStatus {
+		if order.Status == entities.ClosedStatus {
 			for _, orderItem := range order.Items {
 				itemSalesCount[orderItem.ProductID] += orderItem.Quantity
 			}
@@ -414,7 +405,7 @@ func (o *orderService) GetOpenOrders() ([]entities.Order, error) {
 	}
 	openOrders := []entities.Order{}
 	for _, order := range orders {
-		if order.Status == OpenStatus {
+		if order.Status == entities.OpenStatus {
 			openOrders = append(openOrders, order)
 		}
 	}

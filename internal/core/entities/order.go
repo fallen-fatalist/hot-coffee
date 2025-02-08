@@ -44,3 +44,13 @@ type OrderedMenuItemsCount struct {
 	ChocolateCake       int `json:"chocolate_cake,omitempty"`
 	VanillaCupcake      int `json:"vanilla_cupcake,omitempty"`
 }
+
+// Order Statuses
+const (
+	OpenStatus       = "open"
+	ClosedStatus     = "closed"
+	RejectedStatus   = "rejected"
+	InProgressStatus = "in progress"
+)
+
+var Statuses = []string{OpenStatus, ClosedStatus, RejectedStatus, InProgressStatus}
