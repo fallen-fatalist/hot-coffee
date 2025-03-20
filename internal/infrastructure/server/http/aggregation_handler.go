@@ -142,3 +142,20 @@ func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+// Route: GET /reports/search?q=chocolate cake&filter=menu,orders&minPrice=10
+// func HandleFullTextSearchReport(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+
+// 	queryString := r.URL.Query().Get("q")
+// 	filter := r.URL.Query().Get("filter")
+// 	minPrice := r.URL.Query().Get("minPrice")
+// 	maxPrice := r.URL.Query().Get("maxPrice")
+
+// 	switch r.Method {
+// 	case http.MethodGet:
+// 		return
+// 	default:
+// 		return
+// 	}
+// }
