@@ -24,6 +24,7 @@ var (
 	ErrNonNumericMaxPrice  = errors.New("non-numeric maxPrice is provided")
 	ErrNegativeMaxPrice    = errors.New("negative maxPrice is provided")
 	ErrMinMoreThanMaxPrice = errors.New("minPrice cannot be more than or equal to maxPrice")
+	ErrMissingQueryString  = errors.New("search query string is required")
 )
 
 // Valid filter options
@@ -47,6 +48,9 @@ func NewAggregationService(menuRepo repository.MenuRepository, orderRepo reposit
 
 func (s *aggService) FullTextSearchReport(q, filter, minPriceStr, maxPriceStr string) (entities.FullReport, error) {
 	var result entities.FullReport
+	if q == "" {
+		return result, ErrMissingQueryString
+	}
 
 	// Convert price strings to integers
 	minPrice, err := parsePrice(minPriceStr, ErrNonNumericMinPrice, ErrNegativeMinPrice)
@@ -100,7 +104,6 @@ func (s *aggService) FullTextSearchReport(q, filter, minPriceStr, maxPriceStr st
 	return result, nil
 }
 
-// Fetch both menu and order reports
 func (s *aggService) fetchBothReports(q string, minPrice, maxPrice int) (entities.FullReport, error) {
 	menus, err := s.menuRepository.GetMenusFullTextSearchReport(q, minPrice, maxPrice)
 	if err != nil {
@@ -119,7 +122,6 @@ func (s *aggService) fetchBothReports(q string, minPrice, maxPrice int) (entitie
 	}, nil
 }
 
-// Fetch only menu report
 func (s *aggService) fetchMenuReport(q string, minPrice, maxPrice int) (entities.FullReport, error) {
 	menus, err := s.menuRepository.GetMenusFullTextSearchReport(q, minPrice, maxPrice)
 	if err != nil {
@@ -132,7 +134,6 @@ func (s *aggService) fetchMenuReport(q string, minPrice, maxPrice int) (entities
 	}, nil
 }
 
-// Fetch only order report
 func (s *aggService) fetchOrdersReport(q string, minPrice, maxPrice int) (entities.FullReport, error) {
 	orders, err := s.orderRepository.GetOrdersFullTextSearchReport(q, minPrice, maxPrice)
 	if err != nil {
@@ -145,7 +146,6 @@ func (s *aggService) fetchOrdersReport(q string, minPrice, maxPrice int) (entiti
 	}, nil
 }
 
-// Helper function to parse price values
 func parsePrice(priceStr string, errNonNumeric, errNegative error) (int, error) {
 	if priceStr == "" {
 		return 0, nil

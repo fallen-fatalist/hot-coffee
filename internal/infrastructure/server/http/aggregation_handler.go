@@ -164,7 +164,8 @@ func HandleFullTextSearchReport(w http.ResponseWriter, r *http.Request) {
 				errors.Is(err, serviceinstance.ErrMinMoreThanMaxPrice),
 				errors.Is(err, serviceinstance.ErrNegativeMaxPrice),
 				errors.Is(err, serviceinstance.ErrNegativeMinPrice),
-				errors.Is(err, serviceinstance.ErrTooMuchArgs):
+				errors.Is(err, serviceinstance.ErrTooMuchArgs),
+				errors.Is(err, serviceinstance.ErrMissingQueryString):
 				statusCode = http.StatusBadRequest
 			}
 			jsonErrorRespond(w, err, statusCode)
