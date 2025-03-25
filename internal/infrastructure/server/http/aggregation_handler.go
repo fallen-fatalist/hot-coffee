@@ -144,18 +144,43 @@ func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 }
 
 // Route: GET /reports/search?q=chocolate cake&filter=menu,orders&minPrice=10
-// func HandleFullTextSearchReport(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
+func HandleFullTextSearchReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-// 	queryString := r.URL.Query().Get("q")
-// 	filter := r.URL.Query().Get("filter")
-// 	minPrice := r.URL.Query().Get("minPrice")
-// 	maxPrice := r.URL.Query().Get("maxPrice")
+	queryString := r.URL.Query().Get("q")
+	filter := r.URL.Query().Get("filter")
+	minPrice := r.URL.Query().Get("minPrice")
+	maxPrice := r.URL.Query().Get("maxPrice")
 
-// 	switch r.Method {
-// 	case http.MethodGet:
-// 		return
-// 	default:
-// 		return
-// 	}
-// }
+	switch r.Method {
+	case http.MethodGet:
+		orders, err := serviceinstance.AggregationService.FullTextSearchReport(queryString, filter, minPrice, maxPrice)
+		if err != nil {
+			statusCode := http.StatusInternalServerError
+			switch {
+			case errors.Is(err, serviceinstance.ErrNonNumericMaxPrice),
+				errors.Is(err, serviceinstance.ErrNonNumericMinPrice),
+				errors.Is(err, serviceinstance.ErrInvalidArgInFilter),
+				errors.Is(err, serviceinstance.ErrMinMoreThanMaxPrice),
+				errors.Is(err, serviceinstance.ErrNegativeMaxPrice),
+				errors.Is(err, serviceinstance.ErrNegativeMinPrice),
+				errors.Is(err, serviceinstance.ErrTooMuchArgs):
+				statusCode = http.StatusBadRequest
+			}
+			jsonErrorRespond(w, err, statusCode)
+			return
+		}
+
+		jsonPayload, err := json.MarshalIndent(orders, "", "   ")
+		if err != nil {
+			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonPayload)
+		return
+	default:
+		w.Header().Set("Allow", "GET")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}

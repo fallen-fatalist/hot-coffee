@@ -40,8 +40,14 @@ type OrderService interface {
 	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
 }
 
+// New aggregation interface
+type AggregationService interface {
+	FullTextSearchReport(q, filter, minPriceStr, maxPriceStr string) (entities.FullReport, error)
+}
+
 type Service struct {
-	InventoryService InventoryService
-	MenuService      MenuService
-	OrderService     OrderService
+	InventoryService   InventoryService
+	MenuService        MenuService
+	OrderService       OrderService
+	AggregationService AggregationService
 }

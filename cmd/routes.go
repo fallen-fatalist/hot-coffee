@@ -60,6 +60,8 @@ func routes() http.Handler {
 	// GET /getLeftOvers?sortBy={value}&page={page}&pageSize={pageSize}
 	mux.HandleFunc("/inventory/getLeftOvers", httpserver.HandleInventoryLeftovers)
 
+	// GET /reports/search?q=chocolate cake&filter=menu,orders&minPrice=10&maxPrice=12
+	mux.HandleFunc("/reports/search", httpserver.HandleFullTextSearchReport)
 	// New functionality
 	// GET /getLeftOvers?sortBy=quantity?page=1&pageSize=4
 	// mux.HandleFunc("/reports/search", )

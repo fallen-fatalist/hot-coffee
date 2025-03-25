@@ -10,17 +10,19 @@ import (
 
 // Services instances
 var (
-	InventoryService service.InventoryService
-	MenuService      service.MenuService
-	OrderService     service.OrderService
+	InventoryService   service.InventoryService
+	MenuService        service.MenuService
+	OrderService       service.OrderService
+	AggregationService service.AggregationService // New aggregation service
 )
 
 func NewService(repositories *repository.Repository) (*service.Service, error) {
 
 	return &service.Service{
-		InventoryService: NewInventoryService(repositories.Inventory),
-		MenuService:      NewMenuService(repositories.Menu),
-		OrderService:     NewOrderService(repositories.Order),
+		InventoryService:   NewInventoryService(repositories.Inventory),
+		MenuService:        NewMenuService(repositories.Menu),
+		OrderService:       NewOrderService(repositories.Order),
+		AggregationService: NewAggregationService(repositories.Menu, repositories.Order), // New aggregation service
 	}, nil
 }
 
@@ -32,5 +34,6 @@ func Init() {
 	InventoryService = serviceInstance.InventoryService
 	MenuService = serviceInstance.MenuService
 	OrderService = serviceInstance.OrderService
+	AggregationService = serviceInstance.AggregationService // New aggregation service
 	slog.Info("Services initialized")
 }

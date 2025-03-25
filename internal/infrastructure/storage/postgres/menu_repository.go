@@ -328,3 +328,39 @@ func (r *menuRepository) AddPriceDifference(id int, price_difference int) error 
 
 	return nil
 }
+
+func (r *menuRepository) GetMenusFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.MenuReport, error) {
+	query := `
+	SELECT 
+    m.menu_item_id, 
+    m.name, 
+    m.description, 
+    m.price,
+    ROUND(CAST(ts_rank(setweight(to_tsvector(m.description), 'A'), 
+    websearch_to_tsquery($1)) AS NUMERIC), 2) 
+    AS relevance
+	FROM menu_items m
+	WHERE to_tsvector(m.description) @@ websearch_to_tsquery($1)
+	ORDER BY relevance DESC;
+	`
+	rows, err := r.db.Query(query, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	menus := []entities.MenuReport{}
+	for rows.Next() {
+		var menu entities.MenuReport
+
+		err := rows.Scan(&menu.ID, &menu.Name, &menu.Description, &menu.Price, &menu.Relevance)
+		if err != nil {
+			return nil, err
+		}
+
+		if (minPrice == 0 || menu.Price >= float64(minPrice)) && (maxPrice == 0 || menu.Price <= float64(maxPrice)) {
+			menus = append(menus, menu)
+		}
+	}
+	return menus, nil
+}
