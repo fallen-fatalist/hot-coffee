@@ -336,11 +336,11 @@ func (r *menuRepository) GetMenusFullTextSearchReport(q string, minPrice, maxPri
     m.name, 
     m.description, 
     m.price,
-    ROUND(CAST(ts_rank(setweight(to_tsvector(m.description), 'A'), 
+    ROUND(CAST(ts_rank(setweight(to_tsvector(m.name || ' ' || m.description), 'A'), 
     websearch_to_tsquery($1)) AS NUMERIC), 2) 
     AS relevance
 	FROM menu_items m
-	WHERE to_tsvector(m.description) @@ websearch_to_tsquery($1)
+	WHERE to_tsvector(m.name || ' ' || m.description) @@ websearch_to_tsquery($1)
 	ORDER BY relevance DESC;
 	`
 	rows, err := r.db.Query(query, q)

@@ -64,7 +64,6 @@ func routes() http.Handler {
 	mux.HandleFunc("/reports/search", httpserver.HandleFullTextSearchReport)
 	// New functionality
 	// GET /getLeftOvers?sortBy=quantity?page=1&pageSize=4
-	// mux.HandleFunc("/reports/search", )
 
 	// POST /orders/batch-process
 	mux.HandleFunc("/orders/batch-process", httpserver.HandleBatchOrders)
