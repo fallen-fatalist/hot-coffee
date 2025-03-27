@@ -588,7 +588,7 @@ func (r *orderRepository) GetOrdersFullTextSearchReport(q string, minPrice, maxP
 	SELECT 	
 	o.order_id, c.fullname, array_agg(m.name) AS items, 
 	ROUND(CAST(
-		ts_rank(setweight(to_tsvector( c.fullname || ' ' || string_agg(m.name, ' ')), 'A'), 
+		ts_rank(setweight(to_tsvector(c.fullname || ' ' || string_agg(m.name, ' ')), 'A'), 
 		websearch_to_tsquery($1)) AS numeric), 2) AS relevance, 
 	sum(m.price) AS total
 	FROM orders o
@@ -596,7 +596,7 @@ func (r *orderRepository) GetOrdersFullTextSearchReport(q string, minPrice, maxP
 	JOIN customers c USING(customer_id)
 	JOIN menu_items m USING(menu_item_id)
 	GROUP BY o.order_id, c.fullname
-	HAVING to_tsvector(string_agg(c.fullname || ' ' || m.name, ' ')) @@ websearch_to_tsquery($1)
+	HAVING to_tsvector(c.fullname || ' ' || string_agg(m.name, ' ')) @@ websearch_to_tsquery($1)
 	ORDER BY relevance DESC;
 	`
 
