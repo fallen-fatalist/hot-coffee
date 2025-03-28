@@ -265,7 +265,7 @@ func (r *orderRepository) GetOrderRevenue(orderID int64) (totalOrderRevenue floa
 		    JOIN inventory i USING(inventory_item_id)
 		    WHERE oi.order_id = $1
 		)
-		SELECT p.paymentSum - fc.firstCost AS total_revenue
+		SELECT p.paymentSum AS total_revenue
 		FROM payment p, first_cost fc
 	`
 
