@@ -43,7 +43,7 @@ func openDB() (*sql.DB, error) {
 	slog.Info("Trying to connect to PostgreSQL database...")
 
 	// Retry logic: attempt to connect multiple times
-	maxRetries := 6                  // Try 6 times (30 seconds total if we wait 5 seconds between retries)
+	maxRetries := 3                  // Try 6 times (30 seconds total if we wait 5 seconds between retries)
 	retryInterval := 5 * time.Second // Retry every 5 seconds
 	var db *sql.DB
 	var err error
