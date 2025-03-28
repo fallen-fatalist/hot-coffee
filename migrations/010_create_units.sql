@@ -1,0 +1,3 @@
+CREATE TABLE units(
+    name VARCHAR(20) PRIMARY KEY
+);

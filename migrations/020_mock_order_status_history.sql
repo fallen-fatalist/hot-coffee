@@ -1,0 +1,20 @@
+-- Insert mock order status history (expanded with more orders)
+INSERT INTO order_status_history (order_id, past_status, new_status) VALUES
+(2, 'open', 'closed'),
+(3, 'open', 'closed'),
+(4, 'in progress', 'closed'),
+(5, 'open', 'closed'),
+(6, 'in progress', 'closed'),
+(9, 'in progress', 'closed'),
+(10, 'open', 'closed'),
+(11, 'in progress', 'closed'),
+(12, 'closed', 'closed'),
+(13, 'open', 'closed'),
+(14, 'closed', 'in progress'),
+(16, 'in progress', 'closed'),
+(18, 'open', 'closed'),
+(19, 'in progress', 'closed'),
+(20, 'closed', 'closed'),
+(22, 'closed', 'in progress'),
+(23, 'open', 'closed'),
+(24, 'closed', 'closed');
