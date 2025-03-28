@@ -634,7 +634,7 @@ func (r *orderRepository) FetchInventoryUpdates(orderIDs []int64) (inventoryUpda
 			i.inventory_item_id,
 			i.name,
 			SUM(mii.quantity * oi.quantity) AS quantity_used,
-			i.quantity - SUM(mii.quantity * oi.quantity) AS remaining
+			i.quantity AS remaining
 		FROM 
 			order_items oi
 		JOIN 
