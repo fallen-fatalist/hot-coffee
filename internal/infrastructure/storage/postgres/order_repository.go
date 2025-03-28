@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 // Errors
@@ -578,4 +580,49 @@ func (r *orderRepository) GetCustomerIDByName(fullname string, phone string) (in
 		return 0, err
 	}
 	return customer_id, nil
+}
+
+func (r *orderRepository) GetOrdersFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.OrderReport, error) {
+
+	query := `
+	SELECT 	
+	o.order_id, c.fullname, array_agg(m.name) AS items, 
+	ROUND(CAST(
+		ts_rank(setweight(to_tsvector(c.fullname || ' ' || string_agg(m.name, ' ')), 'A'), 
+		websearch_to_tsquery($1)) AS numeric), 2) AS relevance, 
+	sum(m.price) AS total
+	FROM orders o
+	JOIN order_items oi USING(order_id)
+	JOIN customers c USING(customer_id)
+	JOIN menu_items m USING(menu_item_id)
+	GROUP BY o.order_id, c.fullname
+	HAVING to_tsvector(c.fullname || ' ' || string_agg(m.name, ' ')) @@ websearch_to_tsquery($1)
+	ORDER BY relevance DESC;
+	`
+
+	rows, err := r.db.Query(query, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := []entities.OrderReport{}
+	for rows.Next() {
+		var order entities.OrderReport
+		var items []string
+
+		err := rows.Scan(&order.ID, &order.CustomerName, pq.Array(&items), &order.Relevance, &order.Total)
+		if err != nil {
+			return nil, err
+		}
+
+		order.Items = items
+
+		if (minPrice == 0 || order.Total >= float64(minPrice)) && (maxPrice == 0 || order.Total <= float64(maxPrice)) {
+			order.Items = items
+			orders = append(orders, order)
+		}
+	}
+
+	return orders, nil
 }

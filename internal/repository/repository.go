@@ -22,6 +22,7 @@ type MenuRepository interface {
 	GetById(id string) (entities.MenuItem, error)
 	Update(id string, item entities.MenuItem) error
 	Delete(id string) error
+	GetMenusFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.MenuReport, error)
 }
 
 type OrderRepository interface {
@@ -35,6 +36,7 @@ type OrderRepository interface {
 	GetOrderedItemsCountByPeriod(period, month string, year int) (map[string]int, error)
 	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
 	GetCustomerIDByName(fullname string, phone string) (int64, error)
+	GetOrdersFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.OrderReport, error)
 }
 
 type Repository struct {

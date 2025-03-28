@@ -54,3 +54,11 @@ const (
 )
 
 var Statuses = []string{OpenStatus, ClosedStatus, RejectedStatus, InProgressStatus}
+
+type OrderReport struct {
+	ID           string   `json:"order_id,omitempty"`
+	CustomerName string   `json:"customer_name"`
+	Items        []string `json:"items"`
+	Total        float64  `json:"total,omitempty"`
+	Relevance    float64  `json:"relevance"`
+}

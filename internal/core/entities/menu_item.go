@@ -33,3 +33,11 @@ func (m MenuItemSalesByCount) Less(i, j int) bool {
 func (m MenuItemSalesByCount) Swap(i, j int) {
 	m[i], m[j] = m[j], m[i]
 }
+
+type MenuReport struct {
+	ID          string  `json:"product_id,omitempty"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price,omitempty"`
+	Relevance   float64 `json:"relevance"`
+}
