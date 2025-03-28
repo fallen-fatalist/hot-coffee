@@ -2,6 +2,7 @@ package repository
 
 import (
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/vo"
 	"time"
 )
 
@@ -37,6 +38,7 @@ type OrderRepository interface {
 	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
 	GetCustomerIDByName(fullname string, phone string) (int64, error)
 	GetOrdersFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.OrderReport, error)
+	FetchInventoryUpdates(orderIDs []int64) ([]vo.InventoryUpdate, error)
 }
 
 type Repository struct {

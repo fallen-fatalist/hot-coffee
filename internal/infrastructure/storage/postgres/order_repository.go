@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/core/errors"
+	"hot-coffee/internal/vo"
 	"log/slog"
 	"os"
 	"strconv"
@@ -564,9 +565,9 @@ func (r *orderRepository) GetCustomerIDByName(fullname string, phone string) (in
 				(fullname)
 			VALUES 
 				($1)
-			RETURNING customer_idd
+			RETURNING customer_id
 		`
-		row := r.db.QueryRow(insertQuery, fullname, phone)
+		row := r.db.QueryRow(insertQuery, fullname)
 		if row.Err() != nil {
 			return 0, err
 		}
@@ -625,4 +626,45 @@ func (r *orderRepository) GetOrdersFullTextSearchReport(q string, minPrice, maxP
 	}
 
 	return orders, nil
+}
+
+func (r *orderRepository) FetchInventoryUpdates(orderIDs []int64) (inventoryUpdates []vo.InventoryUpdate, err error) {
+	query := `
+		SELECT 
+			i.inventory_item_id,
+			i.name,
+			SUM(mii.quantity * oi.quantity) AS quantity_used,
+			i.quantity - SUM(mii.quantity * oi.quantity) AS remaining
+		FROM 
+			order_items oi
+		JOIN 
+			menu_items_ingredients mii ON oi.menu_item_id = mii.menu_item_id
+		JOIN 
+			inventory i ON mii.inventory_item_id = i.inventory_item_id
+		WHERE 
+			oi.order_id = ANY($1)
+		GROUP BY 
+			i.inventory_item_id, i.name, i.quantity;
+	`
+
+	rows, err := r.db.Query(query, pq.Array(orderIDs))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch inventory updates: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var inventoryUpdate vo.InventoryUpdate
+		err := rows.Scan(&inventoryUpdate.IngredientID, &inventoryUpdate.Name, &inventoryUpdate.Quantity, &inventoryUpdate.Remaining)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan inventory update: %w", err)
+		}
+		inventoryUpdates = append(inventoryUpdates, inventoryUpdate)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("row error while fetching inventory updates: %w", err)
+	}
+
+	return inventoryUpdates, nil
 }
