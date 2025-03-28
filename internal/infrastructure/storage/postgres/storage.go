@@ -49,7 +49,7 @@ func openDB() (*sql.DB, error) {
 	var err error
 
 	// Try connecting up to maxRetries times
-	for i := 0; i < maxRetries; i++ {
+	for range maxRetries {
 		db, err = sql.Open("postgres", dsn)
 		if err == nil {
 			// Create a context with a timeout for the Ping operation
