@@ -20,6 +20,7 @@ import (
 
 // Errors
 var (
+	ErrNegativeOrderID             = errors.New("negative order id provided")
 	ErrEmptyCustomerName           = errors.New("empty customer name provided in order")
 	ErrNegativeOrderItemQuantity   = errors.New("negative order item quantity provided")
 	ErrZeroOrderItemQuantity       = errors.New("zero order item quantity provided")
@@ -92,6 +93,7 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	processedOrders := []dto.ProcessedOrder{}
+	var orderIDs []int64 = []int64{}
 
 	for _, order := range orders {
 		wg.Add(1)
@@ -101,6 +103,7 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 			var processedOrder dto.ProcessedOrder
 			orderID, err := o.CreateOrder(order)
 
+			// Critical sectiton: changing "response" struct
 			mu.Lock()
 			defer mu.Unlock()
 
@@ -129,10 +132,11 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 				}
 			}
 			processedOrder.ID = orderID
+			orderIDs = append(orderIDs, orderID)
 			processedOrder.CustomerName = order.CustomerName
 			processedOrders = append(processedOrders, processedOrder)
-
 		}(order)
+
 	}
 
 	wg.Wait()
@@ -140,11 +144,27 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 	if len(processedOrders) != len(orders) {
 		slog.Error("Incorrect number of orders processed:", "number of processed orders", len(processedOrders), "number of orders provided to process", len(orders))
 	}
+
+	var err error
 	response.ProcessedOrders = processedOrders
 	response.Summary.TotalOrders = len(processedOrders)
+	response.Summary.InventoryUpdates, err = o.fetchInventoryUpdates(orderIDs)
 
-	return response, nil
+	return response, err
 
+}
+
+// TODO: change the location from Order service to Inventory service
+
+// Takes array of Order IDs and return the total inventory updates data
+func (s *orderService) fetchInventoryUpdates(orderIDs []int64) (InventoryUpdates []vo.InventoryUpdate, err error) {
+	// Validation
+	for _, orderID := range orderIDs {
+		if orderID < -1 {
+			return nil, ErrNegativeOrderID
+		}
+	}
+	return s.repository.FetchInventoryUpdates(orderIDs)
 }
 
 func (s *orderService) GetOrders() ([]entities.Order, error) {
@@ -240,6 +260,8 @@ func (s *orderService) SetInProgress(id string) error {
 
 }
 
+var menuItemsMap map[int]bool = make(map[int]bool)
+
 func validateOrder(order entities.Order) error {
 	if order.CustomerName == "" {
 		return ErrEmptyCustomerName
@@ -250,19 +272,20 @@ func validateOrder(order entities.Order) error {
 	}
 
 	// Validate presence of order items in menu
-	menuItems, err := MenuService.GetMenuItems()
-	if err != nil {
-		return err
-	}
-	menuItemsList := make(map[int]bool)
-	for _, menuItem := range menuItems {
-		menuItemID, _ := strconv.Atoi(menuItem.ID)
-		menuItemsList[menuItemID] = true
+	if len(menuItemsMap) == 0 {
+		menuItemsList, err := MenuService.GetMenuItems()
+		if err != nil {
+			return err
+		}
+		for _, menuItem := range menuItemsList {
+			menuItemID, _ := strconv.Atoi(menuItem.ID)
+			menuItemsMap[menuItemID] = true
+		}
 	}
 
 	// Products validation
 	for _, item := range order.Items {
-		if _, exists := menuItemsList[item.ProductID]; !exists {
+		if _, exists := menuItemsMap[item.ProductID]; !exists {
 			return ErrProductIsNotExist
 		} else if item.Quantity < 0 {
 			return ErrNegativeOrderItemQuantity
