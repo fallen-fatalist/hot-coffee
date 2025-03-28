@@ -332,15 +332,15 @@ func (r *menuRepository) AddPriceDifference(id int, price_difference int) error 
 func (r *menuRepository) GetMenusFullTextSearchReport(q string, minPrice, maxPrice int) ([]entities.MenuReport, error) {
 	query := `
 	SELECT 
-    m.menu_item_id, 
-    m.name, 
-    m.description, 
-    m.price,
-    ROUND(CAST(ts_rank(setweight(to_tsvector(m.name || ' ' || m.description), 'A'), 
+    menu_item_id, 
+    name, 
+    description, 
+    price,
+    ROUND(CAST(ts_rank(setweight(to_tsvector(name || ' ' || description), 'A'), 
     websearch_to_tsquery($1)) AS NUMERIC), 2) 
     AS relevance
-	FROM menu_items m
-	WHERE to_tsvector(m.name || ' ' || m.description) @@ websearch_to_tsquery($1)
+	FROM menu_items 
+	WHERE to_tsvector(name || ' ' || description) @@ websearch_to_tsquery($1)
 	ORDER BY relevance DESC;
 	`
 	rows, err := r.db.Query(query, q)

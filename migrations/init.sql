@@ -1,6 +1,3 @@
--- CREATE TYPE status_type AS ENUM ('open', 'rejected');
--- CREATE TABLE unit_type AS ENUM ('shots', 'ml', 'g');
-
 
 CREATE TABLE customers(
     customer_id SERIAL PRIMARY KEY,
@@ -351,5 +348,15 @@ INSERT INTO inventory_transactions (inventory_item_id, order_id, transaction_qua
 (4, 1, -300),  -- 300g of blueberries used for orders
 (5, 1, 600);   -- 600g of sugar restocked
 
-
-
+-- orders idx
+CREATE INDEX orders_status_idx ON orders (status);
+CREATE INDEX orders_time_idx ON orders (created_at);
+--order_items as oi idx
+CREATE INDEX oi_quantity_idx ON order_items (quantity);
+-- indexes for foreign key in junction table
+CREATE INDEX oi_menuid_idx ON order_items (menu_item_id);
+CREATE INDEX oi_orderid_idx ON order_items (order_id);
+-- menu_items_ingredients as mii
+CREATE INDEX mii_menu_item_id ON menu_items_ingredients (menu_item_id);
+CREATE INDEX mii_inventory_item_id ON menu_items_ingredients (inventory_item_id);
+    
