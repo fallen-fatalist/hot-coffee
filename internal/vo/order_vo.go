@@ -9,8 +9,8 @@ type Response struct {
 }
 
 type BatchResponse struct {
-	ProcessedOrders []dto.ProcessedOrder `json:"processed_orders"`
-	Summary         Summary              `json:"summary"`
+	OrderReports []dto.OrderReport `json:"processed_orders"`
+	Summary      Summary           `json:"summary"`
 }
 
 type Summary struct {

@@ -81,7 +81,7 @@ func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 // Creates order concurrently
 func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, error) {
 	response := vo.BatchResponse{
-		ProcessedOrders: nil,
+		OrderReports: nil,
 		Summary: vo.Summary{
 			TotalOrders:      0,
 			Accepted:         0,
@@ -92,15 +92,16 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 	}
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	processedOrders := []dto.ProcessedOrder{}
+	orderReports := []dto.OrderReport{}
 	var orderIDs []int64 = []int64{}
 
 	for _, order := range orders {
 		wg.Add(1)
+
 		go func(order entities.Order) {
 			defer wg.Done()
 
-			var processedOrder dto.ProcessedOrder
+			var orderReport dto.OrderReport
 			orderID, err := o.CreateOrder(order)
 
 			// Critical sectiton: changing "response" struct
@@ -110,44 +111,44 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 			if err != nil {
 				var errInsufficientIngredient *errors.ErrInsufficientIngredient
 				if errors.As(err, &errInsufficientIngredient) {
-					processedOrder.Reason = "insufficient inventory"
+					orderReport.Reason = "insufficient inventory"
 				} else {
-					processedOrder.Reason = "failed to create order due to unhandled errors"
+					orderReport.Reason = "failed to create order due to unhandled errors"
 				}
-				processedOrder.Status = "rejected"
+				orderReport.Status = "rejected"
 				response.Summary.Rejected++
 				slog.Error("Error while creating the order: ", "error", err.Error())
 			} else {
 				order.ID = strconv.Itoa(int(orderID))
-				processedOrder.Status = "accepted"
+				orderReport.Status = "accepted"
 				response.Summary.Accepted++
 				orderRevenue, err := o.repository.GetOrderRevenue(orderID)
 				if err != nil {
 					slog.Error("Error while calculating revenue for the created order: ", "order_id", orderID)
-					processedOrder.Total = 0
-					processedOrder.Reason = "Error occured while calculating the total revenue"
+					orderReport.Total = 0
+					orderReport.Reason = "Error occured while calculating the total revenue"
 				} else {
-					processedOrder.Total = orderRevenue
+					orderReport.Total = orderRevenue
 					response.Summary.TotalRevenue += orderRevenue
 				}
 			}
-			processedOrder.ID = orderID
+			orderReport.ID = orderID
 			orderIDs = append(orderIDs, orderID)
-			processedOrder.CustomerName = order.CustomerName
-			processedOrders = append(processedOrders, processedOrder)
+			orderReport.CustomerName = order.CustomerName
+			orderReports = append(orderReports, orderReport)
 		}(order)
 
 	}
 
 	wg.Wait()
 
-	if len(processedOrders) != len(orders) {
-		slog.Error("Incorrect number of orders processed:", "number of processed orders", len(processedOrders), "number of orders provided to process", len(orders))
+	if len(orderReports) != len(orders) {
+		slog.Error("Incorrect number of orders processed:", "number of processed orders", len(orderReports), "number of orders provided to process", len(orders))
 	}
 
 	var err error
-	response.ProcessedOrders = processedOrders
-	response.Summary.TotalOrders = len(processedOrders)
+	response.OrderReports = orderReports
+	response.Summary.TotalOrders = len(orderReports)
 	response.Summary.InventoryUpdates, err = o.fetchInventoryUpdates(orderIDs)
 
 	return response, err
@@ -483,7 +484,23 @@ func (o *orderService) GetOrderedItemsByPeriod(period, month string, year int) (
 	return orderedItemsCountByPeriod, nil
 }
 
-func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error) {
+var dateLayout = "02.01.2006"
+
+func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDateStr, endDateStr string) (entities.OrderedMenuItemsCount, error) {
+	// ✅ If both dates are empty, return all orders
+	if startDateStr == "" && endDateStr == "" {
+		return o.repository.GetOrderedMenuItemsCountByPeriod(time.Time{}, time.Time{})
+	}
+
+	startDate, err := time.Parse(dateLayout, startDateStr)
+	if err != nil {
+		return entities.OrderedMenuItemsCount{}, err
+	}
+
+	endDate, err := time.Parse(dateLayout, endDateStr)
+	if err != nil {
+		return entities.OrderedMenuItemsCount{}, err
+	}
 	if diff := endDate.Sub(startDate); diff < 0 {
 		return entities.OrderedMenuItemsCount{}, ErrEndDateEarlierThanStartDate
 	}
