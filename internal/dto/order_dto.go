@@ -1,6 +1,6 @@
 package dto
 
-type ProcessedOrder struct {
+type OrderReport struct {
 	ID           int64   `json:"order_id"`
 	CustomerName string  `json:"customer_name"`
 	Status       string  `json:"status,omitempty"`
