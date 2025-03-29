@@ -429,17 +429,34 @@ func (r *orderRepository) GetOrderedItemsCountByPeriod(period, month string, yea
 
 func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error) {
 	menuItemsCount := entities.OrderedMenuItemsCount{}
-	args := []interface{}{startDate, endDate}
-	query := `
-		SELECT 
-            menu_items.name AS name,
-            SUM(order_items.quantity) AS quantity
-        FROM orders
-        JOIN order_items USING(order_id)
-        JOIN menu_items USING(menu_item_id)
-        WHERE orders.created_at BETWEEN $1 AND $2
-        GROUP BY menu_items.name
-	`
+	var query string
+	var args []interface{}
+
+	if startDate.IsZero() && endDate.IsZero() {
+		query = `
+			SELECT 
+ 	           menu_items.name AS name,
+ 	           SUM(order_items.quantity) AS quantity
+ 	       FROM orders
+ 	       JOIN order_items USING(order_id)
+ 	       JOIN menu_items USING(menu_item_id)
+ 	       GROUP BY menu_items.name
+		`
+		args = []interface{}{}
+	} else {
+		query = `
+			SELECT 
+ 	           menu_items.name AS name,
+ 	           SUM(order_items.quantity) AS quantity
+ 	       FROM orders
+ 	       JOIN order_items USING(order_id)
+ 	       JOIN menu_items USING(menu_item_id)
+ 	       WHERE orders.created_at BETWEEN $1 AND $2
+ 	       GROUP BY menu_items.name
+		`
+		args = []interface{}{startDate, endDate}
+
+	}
 
 	// Query the database
 	rows, err := r.db.Query(query, args...)

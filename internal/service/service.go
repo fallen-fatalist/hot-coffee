@@ -3,7 +3,6 @@ package service
 import (
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/vo"
-	"time"
 )
 
 type InventoryService interface {
@@ -37,7 +36,7 @@ type OrderService interface {
 	GetPopularMenuItems() ([]entities.MenuItemSales, error)
 	GetOpenOrders() ([]entities.Order, error)
 	GetOrderedItemsByPeriod(period, month string, year int) (entities.OrderedItemsCountByPeriod, error)
-	GetOrderedMenuItemsCountByPeriod(startDate, endDate time.Time) (entities.OrderedMenuItemsCount, error)
+	GetOrderedMenuItemsCountByPeriod(startDate, endDate string) (entities.OrderedMenuItemsCount, error)
 }
 
 // New aggregation interface

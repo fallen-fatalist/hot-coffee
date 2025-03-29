@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"hot-coffee/internal/service/serviceinstance"
 )
@@ -98,23 +97,13 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var dateLayout = "02.01.2006"
 
 // Route: GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
 func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	startDate, err := time.Parse(dateLayout, r.URL.Query().Get("startDate"))
-	if err != nil {
-		jsonErrorRespond(w, err, http.StatusBadRequest)
-		return
-	}
-
-	endDate, err := time.Parse(dateLayout, r.URL.Query().Get("endDate"))
-	if err != nil {
-		jsonErrorRespond(w, err, http.StatusBadRequest)
-		return
-	}
+	startDate := r.URL.Query().Get("startDate")
+	endDate := r.URL.Query().Get("endDate")
 
 	switch r.Method {
 	case http.MethodGet:
