@@ -69,7 +69,8 @@ func routes() http.Handler {
 	mux.HandleFunc("/orders/batch-process", httpserver.HandleBatchOrders)
 
 	// Logging middleware applied
-	loggedMux := requestLoggingMiddleware(mux)
+	middlewareAppliedMux := httpserver.RequestLoggingMiddleware(mux)
+	middlewareAppliedMux = httpserver.HeadersMiddleware(middlewareAppliedMux)
 
-	return loggedMux
+	return middlewareAppliedMux
 }
