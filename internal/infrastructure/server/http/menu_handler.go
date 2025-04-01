@@ -17,7 +17,8 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 		items, err := serviceinstance.MenuService.GetMenuItems()
 		if err != nil {
 			if errors.Is(err, serviceinstance.ErrNoMenuItems) {
-				jsonMessageRespond(w, "no menu items", http.StatusOK)
+				jsonMessageRespond(w, "No menu items", http.StatusOK)
+				return
 			}
 			statusCode := http.StatusBadRequest
 			jsonErrorRespond(w, err, statusCode)
@@ -49,6 +50,7 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
+		// TODO: show the id of created menu item
 		jsonMessageRespond(w, "Menu Item successfully created", http.StatusCreated)
 		return
 	default:
