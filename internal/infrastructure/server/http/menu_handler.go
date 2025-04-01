@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
 )
@@ -16,6 +17,9 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.MenuService.GetMenuItems()
 		if err != nil {
+			if errors.Is(err, serviceinstance.ErrNoMenuItems) {
+				jsonMessageRespond(w, "no menu items", http.StatusOK)
+			}
 			statusCode := http.StatusBadRequest
 			jsonErrorRespond(w, err, statusCode)
 			return
@@ -39,6 +43,10 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 		err = serviceinstance.MenuService.CreateMenuItem(item)
 		if err != nil {
 			statusCode := http.StatusBadRequest
+			switch err {
+			case serviceinstance.ErrMenuItemAlreadyExists:
+				statusCode = http.StatusConflict
+			}
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
