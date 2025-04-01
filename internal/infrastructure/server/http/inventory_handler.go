@@ -24,6 +24,10 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.InventoryService.GetInventoryItems()
 		if err != nil {
+			if errors.Is(err, serviceinstance.ErrNoInventoryItems) {
+				jsonMessageRespond(w, err.Error(), http.StatusOK)
+				return
+			}
 			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
