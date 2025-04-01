@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"hot-coffee/internal/core/entities"
-	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
 )
 
@@ -51,7 +50,7 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrInventoryItemAlreadyExists:
+			case serviceinstance.ErrInventoryItemAlreadyExists:
 				statusCode = http.StatusConflict
 			}
 			jsonErrorRespond(w, err, statusCode)
