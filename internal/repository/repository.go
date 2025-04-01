@@ -18,7 +18,7 @@ type InventoryRepository interface {
 
 type MenuRepository interface {
 	Create(item entities.MenuItem) (int, error)
-	AddPriceDifference(menu_item_id int, price_difference int) error
+	AddPriceDifference(menu_item_id int, price_difference float64) error
 	GetAll() ([]entities.MenuItem, error)
 	GetById(id string) (entities.MenuItem, error)
 	Update(id string, item entities.MenuItem) error
