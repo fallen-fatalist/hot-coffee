@@ -52,6 +52,7 @@ func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) erro
 		if errors.Is(err, errors.ErrIDAlreadyExists) {
 			return ErrInventoryItemAlreadyExists
 		}
+		return err
 	}
 	return nil
 }
