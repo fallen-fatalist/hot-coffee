@@ -33,3 +33,14 @@ func jsonErrorRespond(w http.ResponseWriter, err error, statusCode int) {
 
 	w.Write(json)
 }
+
+type messageEnveloper struct {
+	Msg string `json:"message"`
+}
+
+func jsonMessageRespond(w http.ResponseWriter, message string, statusCode int) {
+	w.WriteHeader(statusCode)
+	json, _ := json.Marshal(messageEnveloper{message})
+	w.Write(json)
+
+}
