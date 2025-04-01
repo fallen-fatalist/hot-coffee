@@ -1,6 +1,7 @@
 package serviceinstance
 
 import (
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,7 +21,6 @@ import (
 
 // Errors
 var (
-	ErrNegativeOrderID             = errors.New("negative order id provided")
 	ErrEmptyCustomerName           = errors.New("empty customer name provided in order")
 	ErrNegativeOrderItemQuantity   = errors.New("negative order item quantity provided")
 	ErrZeroOrderItemQuantity       = errors.New("zero order item quantity provided")
@@ -30,6 +30,11 @@ var (
 	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 	ErrNotEnoughIgredient          = errors.New("not enough ingredients")
+	ErrNoOrders                    = errors.New("no orders in storage")
+	ErrEmptyOrderID                = errors.New("empty order id provided")
+	ErrNegativeOrderID             = errors.New("negative order id provided")
+	ErrZeroOrderID                 = errors.New("zero order id provided")
+	ErrNonNumericOrderID           = errors.New("non-numeric id provided")
 	// OrdersCountByPeriod errors
 	ErrPeriodDayInvalid   = errors.New("incorrect period day provided")
 	ErrPeriodTypeInvalid  = errors.New("incorrect period type provided")
@@ -51,8 +56,11 @@ func NewOrderService(repository repository.OrderRepository) *orderService {
 }
 
 func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
-	order.Status = entities.OpenStatus
-	if err := validateOrder(order); err != nil {
+	if order.Status == "" {
+		order.Status = entities.OpenStatus
+	}
+
+	if err := validateOrder(&order); err != nil && err != ErrEmptyOrderID {
 		return 0, err
 	}
 
@@ -68,6 +76,7 @@ func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 		return 0, fmt.Errorf("failed to create order in repository: %w", err)
 	}
 
+	// Set initial status of order
 	err = s.repository.SetOrderStatusHistory(orderID, "", order.Status)
 	if err != nil {
 		return 0, fmt.Errorf("failed to save order status history: %w", err)
@@ -169,7 +178,15 @@ func (s *orderService) fetchInventoryUpdates(orderIDs []int64) (InventoryUpdates
 }
 
 func (s *orderService) GetOrders() ([]entities.Order, error) {
-	return s.repository.GetAll()
+	orders, err := s.repository.GetAll()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoOrders
+		}
+		return nil, err
+
+	}
+	return orders, nil
 }
 
 func (s *orderService) GetOrder(id string) (entities.Order, error) {
@@ -196,7 +213,7 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 	if orderDB.Status == "closed" || orderDB.Status == "in progress" {
 		return ErrClosedOrderCannotBeModified
 	}
-	if err := validateOrder(order); err != nil {
+	if err := validateOrder(&order); err != nil {
 		return err
 	}
 	if idStr != order.ID {
@@ -263,7 +280,7 @@ func (s *orderService) SetInProgress(id string) error {
 
 var menuItemsMap map[int]bool = make(map[int]bool)
 
-func validateOrder(order entities.Order) error {
+func validateOrder(order *entities.Order) error {
 	if order.CustomerName == "" {
 		return ErrEmptyCustomerName
 	} else if !utils.In(order.Status, entities.Statuses) {
@@ -274,6 +291,7 @@ func validateOrder(order entities.Order) error {
 
 	// Validate presence of order items in menu
 	if len(menuItemsMap) == 0 {
+		// TODO: On Update of menu items update this map
 		menuItemsList, err := MenuService.GetMenuItems()
 		if err != nil {
 			return err
@@ -294,6 +312,19 @@ func validateOrder(order entities.Order) error {
 			return ErrZeroOrderItemQuantity
 		}
 	}
+
+	// ID Validation
+	err := isValidID(order.ID)
+	if errors.Is(err, ErrEmptyID) {
+		return ErrEmptyOrderID
+	} else if errors.Is(err, ErrNonNumericID) {
+		return ErrNonNumericOrderID
+	} else if errors.Is(err, ErrNegativeID) {
+		return ErrNegativeOrderID
+	} else if errors.Is(err, ErrZeroID) {
+		return ErrZeroOrderID
+	}
+
 	return nil
 }
 
