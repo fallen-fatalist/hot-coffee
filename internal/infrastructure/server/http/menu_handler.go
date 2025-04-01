@@ -50,7 +50,7 @@ func HandleMenu(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
+		jsonMessageRespond(w, "Menu Item successfully created", http.StatusCreated)
 		return
 	default:
 		w.Header().Set("Allow", "GET, POST")
@@ -64,7 +64,6 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id := r.PathValue("id")
-	// ID validation
 	switch r.Method {
 	case http.MethodGet:
 		item, err := serviceinstance.MenuService.GetMenuItem(id)

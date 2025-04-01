@@ -56,7 +56,7 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
+		jsonMessageRespond(w, "Inventory Item successfully created", http.StatusCreated)
 		return
 	default:
 		w.Header().Set("Allow", "GET, POST")
