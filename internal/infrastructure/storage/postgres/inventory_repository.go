@@ -162,10 +162,20 @@ func (r *inventoryRepository) Delete(idStr string) error {
 		WHERE inventory_item_id = $1
 	`
 
-	_, err = r.db.Exec(query, id)
+	res, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }
 
