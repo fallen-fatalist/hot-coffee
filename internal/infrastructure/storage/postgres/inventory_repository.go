@@ -45,19 +45,39 @@ func NewInventoryRepository() *inventoryRepository {
 }
 
 func (r *inventoryRepository) Create(item entities.InventoryItem) error {
-	query := `
-        INSERT INTO inventory (name, price, quantity, unit) 
-        VALUES ($1, $2, $3, $4)
-		`
+	var (
+		query string
+		args  []interface{}
+	)
 
-	args := []interface{}{item.Name, item.Price, item.Quantity, item.Unit}
+	if item.IngredientID != "" {
+		id, _ := strconv.Atoi(item.IngredientID)
+
+		query = `
+			INSERT INTO inventory (inventory_item_id, name, price, quantity, unit) 
+			VALUES ($1, $2, $3, $4, $5)
+		`
+		args = []interface{}{id, item.Name, item.Price, item.Quantity, item.Unit}
+	} else {
+		query = `
+			INSERT INTO inventory (name, price, quantity, unit) 
+			VALUES ($1, $2, $3, $4)
+		`
+		args = []interface{}{item.Name, item.Price, item.Quantity, item.Unit}
+	}
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" { // unique_violation
+				return errors.ErrIDAlreadyExists
+			}
+		}
 		return err
 	}
 
 	return nil
+
 }
 
 func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
@@ -80,6 +100,9 @@ func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
 			return nil, err
 		}
 		items = append(items, item)
+	}
+	if len(items) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return items, nil
