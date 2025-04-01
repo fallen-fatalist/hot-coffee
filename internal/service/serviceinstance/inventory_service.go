@@ -2,11 +2,11 @@ package serviceinstance
 
 import (
 	"database/sql"
-	"errors"
 	"log/slog"
 	"os"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"hot-coffee/internal/repository"
 )
 
@@ -27,6 +27,7 @@ var (
 	ErrNonNumericIngredientID        = errors.New("non-integer ingredient id provided")
 	ErrNegativeIngredientID          = errors.New("negative or zero ingredient id provided")
 	ErrInventoryItemDoesntExist      = errors.New("inventory item with such id does not exist")
+	ErrNoInventoryItems              = errors.New("no inventory items")
 )
 
 type inventoryService struct {
@@ -43,13 +44,16 @@ func NewInventoryService(storage repository.InventoryRepository) *inventoryServi
 }
 
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {
-	// TODO: remove in future, make item.IngredientID to affect to database ID
-	item.IngredientID = "1"
-
-	if err := validateInventoryItem(&item); err != nil {
+	if err := validateInventoryItem(&item); err != nil && err != ErrEmptyInventoryItemID {
 		return err
 	}
-	return s.inventoryRepository.Create(item)
+
+	if err := s.inventoryRepository.Create(item); err != nil {
+		if errors.Is(err, errors.ErrIDAlreadyExists) {
+			return ErrInventoryItemAlreadyExists
+		}
+	}
+	return nil
 }
 
 // Not needed in service layer
@@ -58,7 +62,14 @@ func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) erro
 // }
 
 func (s *inventoryService) GetInventoryItems() ([]entities.InventoryItem, error) {
-	return s.inventoryRepository.GetAll()
+	items, err := s.inventoryRepository.GetAll()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoInventoryItems
+		}
+		return nil, err
+	}
+	return items, nil
 }
 
 func (s *inventoryService) GetInventoryItem(id string) (entities.InventoryItem, error) {
