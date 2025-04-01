@@ -30,6 +30,7 @@ var (
 	ErrMenuItemNotExists          = errors.New("menu item with such id not exists")
 	ErrNegativeMenuID             = errors.New("negative menu item id provided")
 	ErrZeroMenuID                 = errors.New("zero menu item id provided")
+	ErrEmptyMenuItemDescription   = errors.New("menu item with empty description provided")
 )
 
 // TODO: Loading Menu items into memory
@@ -124,6 +125,8 @@ func validateMenuItem(item entities.MenuItem) error {
 
 	if item.Name == "" {
 		return ErrEmptyMenuItemName
+	} else if item.Description == "" {
+		return ErrEmptyMenuItemDescription
 	} else if item.Price < 0 {
 		return ErrNegativePrice
 	} else if item.Price == 0 {
