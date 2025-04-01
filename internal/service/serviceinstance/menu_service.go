@@ -1,7 +1,7 @@
 package serviceinstance
 
 import (
-	"errors"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"hot-coffee/internal/repository"
 )
 
@@ -24,6 +25,11 @@ var (
 	ErrIngredientIsNotInInventory = errors.New("ingredient is not present in inventory")
 	ErrMenuItemIDContainsSpace    = errors.New("menu item id contains space")
 	ErrMenuItemIDContainsSlash    = errors.New("menu item id contains slash")
+	ErrNoMenuItems                = errors.New("no menu items")
+	ErrMenuItemAlreadyExists      = errors.New("menu item with such id already exists")
+	ErrMenuItemNotExists          = errors.New("menu item with such id not exists")
+	ErrNegativeMenuID             = errors.New("negative menu item id provided")
+	ErrZeroMenuID                 = errors.New("zero menu item id provided")
 )
 
 // TODO: Loading Menu items into memory
@@ -40,16 +46,23 @@ func NewMenuService(repository repository.MenuRepository) *menuService {
 }
 
 func (s *menuService) CreateMenuItem(item entities.MenuItem) error {
-	if err := validateMenuItem(item); err != nil {
+	if err := validateMenuItem(item); err != nil && err != ErrEmptyMenuItemID {
 		return err
 	}
 
 	id, err := s.menuRepository.Create(item)
 	if err != nil {
+		if errors.Is(err, errors.ErrIDAlreadyExists) {
+			return ErrMenuItemAlreadyExists
+		}
 		return err
 	}
 
-	return s.menuRepository.AddPriceDifference(id, int(item.Price))
+	if err := s.menuRepository.AddPriceDifference(id, int(item.Price)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *menuService) GetMenuItem(id string) (entities.MenuItem, error) {
@@ -57,7 +70,14 @@ func (s *menuService) GetMenuItem(id string) (entities.MenuItem, error) {
 }
 
 func (s *menuService) GetMenuItems() ([]entities.MenuItem, error) {
-	return s.menuRepository.GetAll()
+	items, err := s.menuRepository.GetAll()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoMenuItems
+		}
+		return nil, err
+	}
+	return items, err
 }
 
 func (s *menuService) UpdateMenuItem(idStr string, item entities.MenuItem) error {
@@ -90,9 +110,19 @@ func (s *menuService) DeleteMenuItem(id string) error {
 }
 
 func validateMenuItem(item entities.MenuItem) error {
-	if item.ID == "" {
+	// ID Validation
+	err := isValidID(item.ID)
+	if errors.Is(err, ErrEmptyID) {
 		return ErrEmptyMenuItemID
-	} else if item.Name == "" {
+	} else if errors.Is(err, ErrNegativeID) {
+		return ErrNegativeMenuID
+	} else if errors.Is(err, ErrNonNumericID) {
+		return ErrNonNumericID
+	} else if errors.Is(err, ErrZeroID) {
+		return ErrZeroMenuID
+	}
+
+	if item.Name == "" {
 		return ErrEmptyMenuItemName
 	} else if item.Price < 0 {
 		return ErrNegativePrice
