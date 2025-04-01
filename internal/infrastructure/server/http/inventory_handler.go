@@ -19,10 +19,10 @@ var (
 
 // Route: /inventory
 func HandleInventory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
 	switch r.Method {
 	case http.MethodGet:
+		w.Header().Set("Content-Type", "application/json")
 		items, err := serviceinstance.InventoryService.GetInventoryItems()
 		if err != nil {
 			jsonErrorRespond(w, err, http.StatusInternalServerError)

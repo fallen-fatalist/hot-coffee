@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
-	"strings"
+	"strconv"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repository"
@@ -15,7 +15,7 @@ var (
 	ErrNegativeInventoryItemQuantity = errors.New("negative quantity of inventory item")
 	ErrEmptyInventoryItemID          = errors.New("empty id provided")
 	ErrEmptyInventoryItemName        = errors.New("empty name provided")
-	ErrEmptyUnit                     = errors.New("empty unit provided")
+	ErrIncorrectUnit                 = errors.New("incorrect unit for inventory item provided")
 	ErrInventoryItemIDCollision      = errors.New("id collision between id in request body and id in url")
 	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
 	ErrIngredientIDContainsSlash     = errors.New("ingredient id contains slash")
@@ -24,6 +24,8 @@ var (
 	ErrNegativePage                  = errors.New("negative page provided")
 	ErrNegativePageSize              = errors.New("negative page size proovided")
 	ErrInvalidInventoryPrice         = errors.New("invalid inventory item price provided")
+	ErrNonNumericIngredientID        = errors.New("non-integer ingredient id provided")
+	ErrNegativeIngredientID          = errors.New("negative or zero ingredient id provided")
 )
 
 type inventoryService struct {
@@ -104,19 +106,33 @@ func (s *inventoryService) GetLeftovers(sortBy string, page, pageSize int) (enti
 	return s.inventoryRepository.GetPage(sortBy, offset, rowCount)
 }
 
+// Validation for inventory items \\
+
+var validUnits = map[string]bool{
+	"grams":  true,
+	"liters": true,
+	"ml":     true,
+}
+
+func isValidUnit(unit string) bool {
+	return validUnits[unit]
+}
+
 func validateInventoryItem(item *entities.InventoryItem) error {
+	// ID Validation
+	itemID, err := strconv.Atoi(item.IngredientID)
 	if item.IngredientID == "" {
 		return ErrEmptyInventoryItemID
+	} else if err != nil {
+		return ErrNonNumericIngredientID
+	} else if itemID < 1 {
+		return ErrNegativeIngredientID
 	} else if item.Name == "" {
 		return ErrEmptyInventoryItemName
-	} else if item.Unit == "" {
-		return ErrEmptyUnit
+	} else if !isValidUnit(item.Unit) {
+		return ErrIncorrectUnit
 	} else if item.Quantity < 0 {
 		return ErrNegativeInventoryItemQuantity
-	} else if strings.Contains(item.IngredientID, "/") {
-		return ErrIngredientIDContainsSlash
-	} else if strings.Contains(item.IngredientID, " ") {
-		return ErrIngredientIDContainsSpace
 	} else if item.Price <= 0 {
 		return ErrInvalidInventoryPrice
 	}
