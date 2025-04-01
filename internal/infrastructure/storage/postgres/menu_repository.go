@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/core/errors"
 	"log/slog"
@@ -333,15 +334,24 @@ func (r *menuRepository) Delete(idStr string) error {
         DELETE FROM menu_items
         WHERE menu_item_id = $1
 	`
-	_, err = r.db.Exec(deleteQuery, id)
+	res, err := r.db.Exec(deleteQuery, id)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
 }
 
-func (r *menuRepository) AddPriceDifference(id int, price_difference int) error {
+func (r *menuRepository) AddPriceDifference(id int, price_difference float64) error {
 	query := `
 	INSERT INTO price_history(menu_item_id, price_difference)
 	VALUES ($1, $2)
