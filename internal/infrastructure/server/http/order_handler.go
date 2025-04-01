@@ -84,6 +84,7 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonPayload)
 		return
 	case http.MethodPut:
+		w.Header().Set("Content-Type", "application/json")
 		var order entities.Order
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&order)
@@ -96,10 +97,16 @@ func HandleOrder(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}
+		jsonMessageRespond(w, "Successfully updated order", http.StatusOK)
 		return
 	case http.MethodDelete:
 		err := serviceinstance.OrderService.DeleteOrder(id)
 		if err != nil {
+			if errors.Is(err, serviceinstance.ErrOrderNotExists) {
+				w.Header().Set("Content-Type", "application/json")
+				jsonErrorRespond(w, err, http.StatusNotFound)
+				return
+			}
 			jsonErrorRespond(w, err, http.StatusBadRequest)
 			return
 		}

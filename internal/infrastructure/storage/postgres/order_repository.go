@@ -382,9 +382,18 @@ func (r *orderRepository) Delete(idStr string) error {
 	deleteOrderQuery := `
 		DELETE FROM orders WHERE order_id = $1
 	`
-	_, err = r.db.Exec(deleteOrderQuery, id)
+	res, err := r.db.Exec(deleteOrderQuery, id)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil

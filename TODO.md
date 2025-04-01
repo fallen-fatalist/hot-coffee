@@ -2,4 +2,4 @@
 2. Change handlers to support OPTIONS method
 3. Add notifying about violation of JSON syntax in handlers layer
 4. Hide the unhandled errors related database
- 
+5. Do API documentation more correct

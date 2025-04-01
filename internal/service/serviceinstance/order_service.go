@@ -264,7 +264,13 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 }
 
 func (s *orderService) DeleteOrder(id string) error {
-	return s.repository.Delete(id)
+	if err := s.repository.Delete(id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrOrderNotExists
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *orderService) CloseOrder(idStr string) error {
