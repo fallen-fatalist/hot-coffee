@@ -443,6 +443,32 @@ func (r *orderRepository) GetOrderedMenuItemsCountByPeriod(startDate, endDate ti
  	       GROUP BY menu_items.name
 		`
 		args = []interface{}{}
+	} else if startDate.IsZero() {
+		query = `
+			SELECT 
+ 	           menu_items.name AS name,
+ 	           SUM(order_items.quantity) AS quantity
+ 	       FROM orders
+ 	       JOIN order_items USING(order_id)
+ 	       JOIN menu_items USING(menu_item_id)
+ 	       WHERE orders.created_at <= $1
+ 	       GROUP BY menu_items.name
+		`
+		args = []interface{}{endDate}
+
+	} else if endDate.IsZero() {
+		query = `
+			SELECT 
+ 	           menu_items.name AS name,
+ 	           SUM(order_items.quantity) AS quantity
+ 	       FROM orders
+ 	       JOIN order_items USING(order_id)
+ 	       JOIN menu_items USING(menu_item_id)
+ 	       WHERE orders.created_at >= $1 
+ 	       GROUP BY menu_items.name
+		`
+		args = []interface{}{startDate}
+
 	} else {
 		query = `
 			SELECT 
