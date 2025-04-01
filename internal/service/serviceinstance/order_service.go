@@ -35,6 +35,8 @@ var (
 	ErrNegativeOrderID             = errors.New("negative order id provided")
 	ErrZeroOrderID                 = errors.New("zero order id provided")
 	ErrNonNumericOrderID           = errors.New("non-numeric id provided")
+	ErrOrderNotExists              = errors.New("order with such id does not exist")
+	ErrOrderAlreadyExists          = errors.New("order with such id already exists")
 	// OrdersCountByPeriod errors
 	ErrPeriodDayInvalid   = errors.New("incorrect period day provided")
 	ErrPeriodTypeInvalid  = errors.New("incorrect period type provided")
@@ -61,25 +63,28 @@ func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 	}
 
 	if err := validateOrder(&order); err != nil && err != ErrEmptyOrderID {
-		return 0, err
+		return -1, err
 	}
 
 	// Fetch customer customer_id
 	customerID, err := s.repository.GetCustomerIDByName(order.CustomerName, "")
 	if err != nil {
-		return 0, fmt.Errorf("error while fetching the customer name: %w", err)
+		return -1, fmt.Errorf("error while fetching the customer name: %w", err)
 	}
 	order.CustomerID = customerID
 
 	orderID, err := s.repository.Create(order)
 	if err != nil {
-		return 0, fmt.Errorf("failed to create order in repository: %w", err)
+		if errors.Is(err, errors.ErrIDAlreadyExists) {
+			return -1, ErrOrderAlreadyExists
+		}
+		return -1, fmt.Errorf("failed to create order in repository: %w", err)
 	}
 
 	// Set initial status of order
 	err = s.repository.SetOrderStatusHistory(orderID, "", order.Status)
 	if err != nil {
-		return 0, fmt.Errorf("failed to save order status history: %w", err)
+		return -1, fmt.Errorf("failed to save order status history: %w", err)
 	}
 
 	return orderID, nil
@@ -190,7 +195,19 @@ func (s *orderService) GetOrders() ([]entities.Order, error) {
 }
 
 func (s *orderService) GetOrder(id string) (entities.Order, error) {
-	return s.repository.GetById(id)
+	err := isValidID(id)
+	if err != nil {
+		return entities.Order{}, err
+	}
+
+	order, err := s.repository.GetById(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.Order{}, ErrOrderNotExists
+		}
+		return entities.Order{}, err
+	}
+	return order, nil
 }
 
 func (s *orderService) GetOrderRevenue(orderIDstr string) (float64, error) {
@@ -203,21 +220,32 @@ func (s *orderService) GetOrderRevenue(orderIDstr string) (float64, error) {
 }
 
 func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
-	orderDB, err := s.repository.GetById(idStr)
-	if err != nil {
-		return err
-	}
-	pastStatus := order.Status
-	order.Status = orderDB.Status
-
-	if orderDB.Status == "closed" || orderDB.Status == "in progress" {
-		return ErrClosedOrderCannotBeModified
-	}
 	if err := validateOrder(&order); err != nil {
 		return err
 	}
 	if idStr != order.ID {
 		return ErrInventoryItemIDCollision
+	}
+
+	orderDB, err := s.repository.GetById(idStr)
+	if err != nil {
+		return err
+	}
+	pastStatus := orderDB.Status
+
+	customerID, err := s.repository.GetCustomerIDByName(order.CustomerName, "")
+	if err != nil {
+		return err
+	}
+
+	if customerID != order.CustomerID {
+		order.CustomerID = customerID
+	}
+
+	// TODO: Make atomic fetch and update
+	err = s.repository.Update(idStr, order)
+	if err != nil {
+		return err
 	}
 
 	// if orderDB.Status == "in progress" {
@@ -226,15 +254,13 @@ func (s *orderService) UpdateOrder(idStr string, order entities.Order) error {
 	// 	}
 	// }
 
-	// MUST DO: Add deduction logic
-
-	if pastStatus != orderDB.Status {
+	if pastStatus != order.Status {
 		if err := s.updateOrderStatusHistory(idStr, pastStatus, order.Status); err != nil {
 			return err
 		}
 	}
 
-	return s.repository.Update(idStr, order)
+	return nil
 }
 
 func (s *orderService) DeleteOrder(id string) error {
