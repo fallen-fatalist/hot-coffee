@@ -21,6 +21,12 @@ var (
 	ErrIncorrectMenuItem = errors.New("incorrect menu item fetched, it's absent in menu item count struct")
 )
 
+// Constants
+const (
+	deduct = false
+	add    = true
+)
+
 type orderRepository struct {
 	db *sql.DB
 }
@@ -58,22 +64,47 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		}
 	}()
 
-	insertOrderQuery := `
-		INSERT INTO orders(customer_id, status)
-		VALUES ($1, $2)
-		RETURNING order_id
-	`
+	var (
+		insertOrderQuery string
+		row              *sql.Row
+		args             []interface{}
+	)
 
-	row := tx.QueryRow(insertOrderQuery, order.CustomerID, order.Status)
-	if row.Err() != nil {
-		return 0, fmt.Errorf("failed to inserting new order: %w", row.Err())
+	if order.ID != "" {
+		// Convert string ID to int64
+		orderIDInt, convErr := strconv.ParseInt(order.ID, 10, 64)
+		if convErr != nil {
+			tx.Rollback()
+			return -1, fmt.Errorf("invalid order ID: %w", convErr)
+		}
+
+		insertOrderQuery = `
+			INSERT INTO orders(order_id, customer_id, status)
+			VALUES ($1, $2, $3)
+			RETURNING order_id
+		`
+		args = []interface{}{orderIDInt, order.CustomerID, order.Status}
+		row = tx.QueryRow(insertOrderQuery, args...)
+	} else {
+		insertOrderQuery = `
+			INSERT INTO orders(customer_id, status)
+			VALUES ($1, $2)
+			RETURNING order_id
+		`
+		args = []interface{}{order.CustomerID, order.Status}
+		row = tx.QueryRow(insertOrderQuery, args...)
 	}
 
 	var orderID int64
 	err = row.Scan(&orderID)
 	if err != nil {
 		tx.Rollback()
-		return 0, fmt.Errorf("failed to scan order ID from row: %w", err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" { // unique_violation
+				return -1, errors.ErrIDAlreadyExists
+			}
+		}
+		return -1, fmt.Errorf("failed to scan order ID from row: %w", err)
 	}
 
 	// Insert order items
@@ -81,26 +112,25 @@ func (r *orderRepository) Create(order entities.Order) (int64, error) {
 		INSERT INTO order_items(menu_item_id, order_id, quantity, customization_info)
 		VALUES ($1, $2, $3, $4)
 	`
-
 	for _, item := range order.Items {
 		_, err = tx.Exec(insertOrderItemQuery, item.ProductID, orderID, item.Quantity, item.CustomizationInfo)
 		if err != nil {
 			tx.Rollback()
-			return 0, fmt.Errorf("failed to insert order item: %w", err)
+			return -1, fmt.Errorf("failed to insert order item: %w", err)
 		}
 	}
 
-	// Deduct order items
-	err = inventoryRepositoryInstance.deductOrderItemsIngredients(tx, orderID)
+	// Deduct inventory
+	err = inventoryRepositoryInstance.deductOrAddOrderItemsIngredients(tx, orderID, deduct)
 	if err != nil {
-		return 0, fmt.Errorf("failed to deduct order items ingredients: %w", err)
+		tx.Rollback()
+		return -1, fmt.Errorf("failed to deduct order items ingredients: %w", err)
 	}
 
-	// Commit transaction if all succeeds
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return 0, fmt.Errorf("failed to commit transaction after order creation: %w", err)
+		return -1, fmt.Errorf("failed to commit transaction after order creation: %w", err)
 	}
 
 	return orderID, nil
@@ -213,7 +243,7 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 	for rows.Next() {
 		var (
 			orderItemID       string
-			customerID        string
+			customerID        int64
 			status            string
 			createdAt         string
 			menuItemID        sql.NullString
@@ -224,9 +254,10 @@ func (r *orderRepository) GetById(idStr string) (entities.Order, error) {
 		if err := rows.Scan(&orderItemID, &customerID, &status, &createdAt, &menuItemID, &quantity, &customizationInfo); err != nil {
 			return order, err
 		}
+
 		if order.ID == "" {
 			order.ID = orderItemID
-			order.CustomerName = customerID
+			order.CustomerID = customerID
 			order.Status = status
 			order.CreatedAt = createdAt
 		}
@@ -283,6 +314,7 @@ func (r *orderRepository) Update(idStr string, order entities.Order) error {
 	if err != nil {
 		return ErrNonNumericID
 	}
+
 	query := `
 		UPDATE orders
 		SET customer_id = $1, status = $2
@@ -293,7 +325,13 @@ func (r *orderRepository) Update(idStr string, order entities.Order) error {
 		return err
 	}
 
-	_, err = tx.Exec(query, order.CustomerName, order.Status, id)
+	// Add ingredients back
+	err = inventoryRepositoryInstance.deductOrAddOrderItemsIngredients(tx, int64(id), add)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(query, order.CustomerID, order.Status, id)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -318,6 +356,12 @@ func (r *orderRepository) Update(idStr string, order entities.Order) error {
 			tx.Rollback()
 			return err
 		}
+	}
+
+	// Deduct new ingredients
+	err = inventoryRepositoryInstance.deductOrAddOrderItemsIngredients(tx, int64(id), deduct)
+	if err != nil {
+		return err
 	}
 
 	err = tx.Commit()

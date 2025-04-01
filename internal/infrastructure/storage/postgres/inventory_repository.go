@@ -261,7 +261,8 @@ type inventoryCount struct {
 	itemCount       int
 }
 
-func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID int64) error {
+// TODO: Bring it to service layer
+func (r *inventoryRepository) deductOrAddOrderItemsIngredients(tx *sql.Tx, orderID int64, add bool) error {
 	// Part 1 Join Menu Items and their Ingredients
 	// We fetch data to know how many ingredients to deduct
 
@@ -306,12 +307,23 @@ func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID in
 	}
 
 	// Part 2 Deduction part
-	deductQuery := `
+	var deductQuery string
+	if add {
+		deductQuery = `
+        UPDATE inventory
+		SET  
+			quantity = quantity + $2 
+		WHERE inventory_item_id = $1
+	`
+	} else {
+		deductQuery = `
         UPDATE inventory
 		SET  
 			quantity = quantity - $2 
 		WHERE inventory_item_id = $1
 	`
+
+	}
 
 	for _, menuItemIngredient := range menuItemsIngredients {
 		args := []interface{}{menuItemIngredient.IngredientID, menuItemIngredient.Quantity}
@@ -333,7 +345,13 @@ func (r *inventoryRepository) deductOrderItemsIngredients(tx *sql.Tx, orderID in
 			slog.Error("Error while converting Menu Item Ingredient into integer value:", "Ingredient ID", ingredientID, "error", err.Error())
 			continue
 		}
-		err = r.saveInventoryTransaction(tx, int64(ingredientID), orderID, -menuItemIngredient.Quantity)
+		var differenceQuantity float64
+		if add {
+			differenceQuantity = menuItemIngredient.Quantity
+		} else {
+			differenceQuantity = -menuItemIngredient.Quantity
+		}
+		err = r.saveInventoryTransaction(tx, int64(ingredientID), orderID, differenceQuantity)
 		if err != nil {
 			tx.Rollback()
 			return err
