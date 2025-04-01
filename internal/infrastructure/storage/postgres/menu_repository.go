@@ -3,9 +3,12 @@ package postgres
 import (
 	"database/sql"
 	"hot-coffee/internal/core/entities"
+	"hot-coffee/internal/core/errors"
 	"log/slog"
 	"os"
 	"strconv"
+
+	"github.com/lib/pq"
 )
 
 type menuRepository struct {
@@ -32,35 +35,55 @@ func NewMenuRepository() *menuRepository {
 	return menuRepositoryInstance
 }
 
-func (r *menuRepository) Create(item entities.MenuItem) (int, error) {
-	// Query to insert a new menu item
-	query := `
-        INSERT INTO menu_items (name, description, price) 
-        VALUES ($1, $2, $3)
-        RETURNING menu_item_id
-	`
 
-	// Use a transaction to ensure atomicity
+func (r *menuRepository) Create(item entities.MenuItem) (int, error) {
+	var (
+		query string
+		args  []interface{}
+	)
+
+	// If item.ID (menu_item_id) is non-zero, we use it explicitly
+	if item.ID != "" {
+		query = `
+            INSERT INTO menu_items (menu_item_id, name, description, price)
+            VALUES ($1, $2, $3, $4)
+            RETURNING menu_item_id
+        `
+		args = []interface{}{item.ID, item.Name, item.Description, item.Price}
+	} else {
+		query = `
+            INSERT INTO menu_items (name, description, price)
+            VALUES ($1, $2, $3)
+            RETURNING menu_item_id
+        `
+		args = []interface{}{item.Name, item.Description, item.Price}
+	}
+
+	// Start transaction
 	tx, err := r.db.Begin()
 	if err != nil {
 		return -1, err
 	}
 
-	// Insert the menu item and get the generated ID
+	// Insert the menu item and get the menu_item_id
 	var menuItemID int
-	err = tx.QueryRow(query, item.Name, item.Description, item.Price).Scan(&menuItemID)
+	err = tx.QueryRow(query, args...).Scan(&menuItemID)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" { // unique_violation
+				return -1, errors.ErrIDAlreadyExists
+			}
+		}
 		tx.Rollback()
 		return -1, err
 	}
 
-	// Query to insert menu item ingredients
+	// Insert ingredients
 	ingredientQuery := `
         INSERT INTO menu_items_ingredients (menu_item_id, inventory_item_id, quantity)
         VALUES ($1, $2, $3)
-	`
+    `
 
-	// Insert each ingredient
 	for _, ingredient := range item.Ingredients {
 		_, err = tx.Exec(ingredientQuery, menuItemID, ingredient.IngredientID, ingredient.Quantity)
 		if err != nil {
@@ -69,7 +92,7 @@ func (r *menuRepository) Create(item entities.MenuItem) (int, error) {
 		}
 	}
 
-	// Commit the transaction
+	// Commit transaction
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
@@ -151,6 +174,10 @@ func (r *menuRepository) GetAll() ([]entities.MenuItem, error) {
 	// Check for errors during row iteration
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if len(menuItems) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return menuItems, nil
