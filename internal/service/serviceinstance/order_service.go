@@ -491,7 +491,22 @@ func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDateStr, endDateStr
 	if startDateStr == "" && endDateStr == "" {
 		return o.repository.GetOrderedMenuItemsCountByPeriod(time.Time{}, time.Time{})
 	}
+	// when no startDate or endDate
+	if startDateStr == "" {
+		endDate, err := time.Parse(dateLayout, endDateStr)
+		if err != nil {
+			return entities.OrderedMenuItemsCount{}, err
+		}
+		return o.repository.GetOrderedMenuItemsCountByPeriod(time.Time{}, endDate)
+	} else if endDateStr == "" {
+		startDate, err := time.Parse(dateLayout, startDateStr)
+		if err != nil {
+			return entities.OrderedMenuItemsCount{}, err
+		}
+		return o.repository.GetOrderedMenuItemsCountByPeriod(startDate, time.Time{})
+	}
 
+	//When both
 	startDate, err := time.Parse(dateLayout, startDateStr)
 	if err != nil {
 		return entities.OrderedMenuItemsCount{}, err
