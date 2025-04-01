@@ -17,6 +17,8 @@ services:
   db:
     image: postgres:15
     environment:
+      - TZ=Asia/Almaty
+      - PGTZ=Asia/Almaty
       - POSTGRES_USER=latte
       - POSTGRES_PASSWORD=latte
       - POSTGRES_DB=frappuccino
