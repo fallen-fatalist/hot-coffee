@@ -1,10 +1,10 @@
 package serviceinstance
 
 import (
+	"database/sql"
 	"errors"
 	"log/slog"
 	"os"
-	"strconv"
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/repository"
@@ -15,7 +15,7 @@ var (
 	ErrNegativeInventoryItemQuantity = errors.New("negative quantity of inventory item")
 	ErrEmptyInventoryItemID          = errors.New("empty id provided")
 	ErrEmptyInventoryItemName        = errors.New("empty name provided")
-	ErrIncorrectUnit                 = errors.New("incorrect unit for inventory item provided")
+	ErrInvalidUnit                   = errors.New("incorrect unit for inventory item provided")
 	ErrInventoryItemIDCollision      = errors.New("id collision between id in request body and id in url")
 	ErrInventoryItemAlreadyExists    = errors.New("inventory item with such id already exists")
 	ErrIngredientIDContainsSlash     = errors.New("ingredient id contains slash")
@@ -26,6 +26,7 @@ var (
 	ErrInvalidInventoryPrice         = errors.New("invalid inventory item price provided")
 	ErrNonNumericIngredientID        = errors.New("non-integer ingredient id provided")
 	ErrNegativeIngredientID          = errors.New("negative or zero ingredient id provided")
+	ErrInventoryItemDoesntExist      = errors.New("inventory item with such id does not exist")
 )
 
 type inventoryService struct {
@@ -42,6 +43,9 @@ func NewInventoryService(storage repository.InventoryRepository) *inventoryServi
 }
 
 func (s *inventoryService) CreateInventoryItem(item entities.InventoryItem) error {
+	// TODO: remove in future, make item.IngredientID to affect to database ID
+	item.IngredientID = "1"
+
 	if err := validateInventoryItem(&item); err != nil {
 		return err
 	}
@@ -58,7 +62,12 @@ func (s *inventoryService) GetInventoryItems() ([]entities.InventoryItem, error)
 }
 
 func (s *inventoryService) GetInventoryItem(id string) (entities.InventoryItem, error) {
-	return s.inventoryRepository.GetById(id)
+	item, err := s.inventoryRepository.GetById(id)
+
+	if err == sql.ErrNoRows {
+		return entities.InventoryItem{}, ErrInventoryItemDoesntExist
+	}
+	return item, err
 }
 
 func (s *inventoryService) UpdateInventoryItem(id string, item entities.InventoryItem) error {
@@ -70,11 +79,23 @@ func (s *inventoryService) UpdateInventoryItem(id string, item entities.Inventor
 		return ErrInventoryItemIDCollision
 	}
 
-	return s.inventoryRepository.Update(id, item)
+	if err := s.inventoryRepository.Update(id, item); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrInventoryItemDoesntExist
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *inventoryService) DeleteInventoryItem(id string) error {
-	return s.inventoryRepository.Delete(id)
+	if err := s.inventoryRepository.Delete(id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrInventoryItemDoesntExist
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *inventoryService) GetLeftovers(sortBy string, page, pageSize int) (entities.PaginatedInventoryItems, error) {
@@ -120,18 +141,22 @@ func isValidUnit(unit string) bool {
 }
 
 func validateInventoryItem(item *entities.InventoryItem) error {
+	// TODO: add inventory item id in repository
 	// ID Validation
-	itemID, err := strconv.Atoi(item.IngredientID)
-	if item.IngredientID == "" {
+	err := isValidID(item.IngredientID)
+	if errors.Is(err, ErrEmptyID) {
 		return ErrEmptyInventoryItemID
-	} else if err != nil {
+	} else if errors.Is(err, ErrNonNumericID) {
 		return ErrNonNumericIngredientID
-	} else if itemID < 1 {
+	} else if errors.Is(err, ErrNegativeID) {
 		return ErrNegativeIngredientID
-	} else if item.Name == "" {
+	}
+
+	// Other fields validation
+	if item.Name == "" {
 		return ErrEmptyInventoryItemName
 	} else if !isValidUnit(item.Unit) {
-		return ErrIncorrectUnit
+		return ErrInvalidUnit
 	} else if item.Quantity < 0 {
 		return ErrNegativeInventoryItemQuantity
 	} else if item.Price <= 0 {

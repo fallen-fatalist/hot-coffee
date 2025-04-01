@@ -127,9 +127,18 @@ func (r *inventoryRepository) Update(idStr string, item entities.InventoryItem) 
 
 	args := []interface{}{id, item.Name, item.Price, item.Quantity, item.Unit}
 
-	_, err = r.db.Exec(query, args...)
+	res, err := r.db.Exec(query, args...)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil

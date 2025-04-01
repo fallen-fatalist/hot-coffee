@@ -19,10 +19,9 @@ var (
 
 // Route: /inventory
 func HandleInventory(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
-		w.Header().Set("Content-Type", "application/json")
 		items, err := serviceinstance.InventoryService.GetInventoryItems()
 		if err != nil {
 			jsonErrorRespond(w, err, http.StatusInternalServerError)
@@ -74,7 +73,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrInventoryItemDoesntExist:
+			case serviceinstance.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)
@@ -100,7 +99,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrInventoryItemDoesntExist:
+			case serviceinstance.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)
@@ -112,7 +111,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrInventoryItemDoesntExist:
+			case serviceinstance.ErrInventoryItemDoesntExist:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)
