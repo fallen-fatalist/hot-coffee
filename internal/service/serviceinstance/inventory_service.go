@@ -74,6 +74,10 @@ func (s *inventoryService) GetInventoryItems() ([]entities.InventoryItem, error)
 }
 
 func (s *inventoryService) GetInventoryItem(id string) (entities.InventoryItem, error) {
+	if err := isValidID(id); err != nil {
+		return entities.InventoryItem{}, err
+	}
+
 	item, err := s.inventoryRepository.GetById(id)
 
 	if err == sql.ErrNoRows {
@@ -153,17 +157,6 @@ func isValidUnit(unit string) bool {
 }
 
 func validateInventoryItem(item *entities.InventoryItem) error {
-	// TODO: add inventory item id in repository
-	// ID Validation
-	err := isValidID(item.IngredientID)
-	if errors.Is(err, ErrEmptyID) {
-		return ErrEmptyInventoryItemID
-	} else if errors.Is(err, ErrNonNumericID) {
-		return ErrNonNumericIngredientID
-	} else if errors.Is(err, ErrNegativeID) {
-		return ErrNegativeIngredientID
-	}
-
 	// Other fields validation
 	if item.Name == "" {
 		return ErrEmptyInventoryItemName
@@ -177,6 +170,16 @@ func validateInventoryItem(item *entities.InventoryItem) error {
 
 	if item.Quantity == 0 {
 		item.Quantity = 0
+	}
+
+	// ID Validation
+	err := isValidID(item.IngredientID)
+	if errors.Is(err, ErrEmptyID) {
+		return ErrEmptyInventoryItemID
+	} else if errors.Is(err, ErrNonNumericID) {
+		return ErrNonNumericIngredientID
+	} else if errors.Is(err, ErrNegativeID) {
+		return ErrNegativeIngredientID
 	}
 
 	return nil

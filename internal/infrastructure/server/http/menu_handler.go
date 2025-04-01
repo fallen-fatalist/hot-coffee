@@ -70,7 +70,7 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrMenuItemDoesntExist:
+			case serviceinstance.ErrMenuItemNotExists:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)
@@ -96,7 +96,7 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrMenuItemDoesntExist:
+			case serviceinstance.ErrMenuItemNotExists:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)

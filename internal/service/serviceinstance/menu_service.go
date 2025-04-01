@@ -31,6 +31,8 @@ var (
 	ErrNegativeMenuID             = errors.New("negative menu item id provided")
 	ErrZeroMenuID                 = errors.New("zero menu item id provided")
 	ErrEmptyMenuItemDescription   = errors.New("menu item with empty description provided")
+	ErrNegativeMenuItemID         = errors.New("negative menu item id provided")
+	ErrNonNumericMenuItemID       = errors.New("non-numeric menu item id provided")
 )
 
 // TODO: Loading Menu items into memory
@@ -47,7 +49,7 @@ func NewMenuService(repository repository.MenuRepository) *menuService {
 }
 
 func (s *menuService) CreateMenuItem(item entities.MenuItem) error {
-	if err := validateMenuItem(item); err != nil && err != ErrEmptyMenuItemID {
+	if err := validateMenuItem(&item); err != nil && err != ErrEmptyMenuItemID {
 		return err
 	}
 
@@ -66,8 +68,20 @@ func (s *menuService) CreateMenuItem(item entities.MenuItem) error {
 	return nil
 }
 
-func (s *menuService) GetMenuItem(id string) (entities.MenuItem, error) {
-	return s.menuRepository.GetById(id)
+func (s *menuService) GetMenuItem(idStr string) (entities.MenuItem, error) {
+	// ID validation
+	if err := isValidID(idStr); err != nil {
+		return entities.MenuItem{}, err
+	}
+
+	item, err := s.menuRepository.GetById(idStr)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.MenuItem{}, ErrMenuItemNotExists
+		}
+		return entities.MenuItem{}, err
+	}
+	return item, err
 }
 
 func (s *menuService) GetMenuItems() ([]entities.MenuItem, error) {
@@ -82,7 +96,7 @@ func (s *menuService) GetMenuItems() ([]entities.MenuItem, error) {
 }
 
 func (s *menuService) UpdateMenuItem(idStr string, item entities.MenuItem) error {
-	if err := validateMenuItem(item); err != nil {
+	if err := validateMenuItem(&item); err != nil {
 		return err
 	}
 
@@ -110,19 +124,7 @@ func (s *menuService) DeleteMenuItem(id string) error {
 	return s.menuRepository.Delete(id)
 }
 
-func validateMenuItem(item entities.MenuItem) error {
-	// ID Validation
-	err := isValidID(item.ID)
-	if errors.Is(err, ErrEmptyID) {
-		return ErrEmptyMenuItemID
-	} else if errors.Is(err, ErrNegativeID) {
-		return ErrNegativeMenuID
-	} else if errors.Is(err, ErrNonNumericID) {
-		return ErrNonNumericID
-	} else if errors.Is(err, ErrZeroID) {
-		return ErrZeroMenuID
-	}
-
+func validateMenuItem(item *entities.MenuItem) error {
 	if item.Name == "" {
 		return ErrEmptyMenuItemName
 	} else if item.Description == "" {
@@ -169,6 +171,18 @@ func validateMenuItem(item entities.MenuItem) error {
 		} else if ingredient.Quantity == 0 {
 			return ErrZeroIngredientQuantity
 		}
+	}
+
+	// ID Validation
+	err = isValidID(item.ID)
+	if errors.Is(err, ErrEmptyID) {
+		return ErrEmptyMenuItemID
+	} else if errors.Is(err, ErrNegativeID) {
+		return ErrNegativeMenuID
+	} else if errors.Is(err, ErrNonNumericID) {
+		return ErrNonNumericMenuItemID
+	} else if errors.Is(err, ErrZeroID) {
+		return ErrZeroMenuID
 	}
 	return nil
 }

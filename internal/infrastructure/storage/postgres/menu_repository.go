@@ -35,7 +35,6 @@ func NewMenuRepository() *menuRepository {
 	return menuRepositoryInstance
 }
 
-
 func (r *menuRepository) Create(item entities.MenuItem) (int, error) {
 	var (
 		query string
