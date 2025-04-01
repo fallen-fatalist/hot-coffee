@@ -101,6 +101,7 @@ func (r *inventoryRepository) GetAll() ([]entities.InventoryItem, error) {
 		}
 		items = append(items, item)
 	}
+
 	if len(items) == 0 {
 		return nil, sql.ErrNoRows
 	}
