@@ -14,6 +14,7 @@ import (
 // Errors instances
 var (
 	ErrIncorrectRequest = New("incorrect request provided")
+	ErrIDAlreadyExists  = New("entity with such id already exists")
 )
 
 // General Application error type \\
