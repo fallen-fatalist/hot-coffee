@@ -112,6 +112,7 @@ var validUnits = map[string]bool{
 	"grams":  true,
 	"liters": true,
 	"ml":     true,
+	"kg":     true,
 }
 
 func isValidUnit(unit string) bool {
