@@ -174,6 +174,10 @@ func (r *orderRepository) GetAll() ([]entities.Order, error) {
 		return nil, err
 	}
 
+	if len(orderItems) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return orderItems, nil
 }
 

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -56,7 +57,7 @@ func HandleInventory(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
-		jsonMessageRespond(w, "Inventory Item successfully created", http.StatusCreated)
+		jsonMessageRespond(w, fmt.Sprintf("Successfully created Inventory item with id %s", item.IngredientID), http.StatusCreated)
 		return
 	default:
 		w.Header().Set("Allow", "GET, POST")

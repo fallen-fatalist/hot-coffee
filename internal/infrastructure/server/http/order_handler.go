@@ -8,7 +8,6 @@ import (
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/core/errors"
 	"hot-coffee/internal/service/serviceinstance"
-	"hot-coffee/internal/vo"
 )
 
 // Route: /orders
@@ -18,6 +17,10 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		orders, err := serviceinstance.OrderService.GetOrders()
 		if err != nil {
+			if errors.Is(err, serviceinstance.ErrNoOrders) {
+				jsonMessageRespond(w, "No orders", http.StatusOK)
+				return
+			}
 			jsonErrorRespond(w, err, http.StatusInternalServerError)
 			return
 		}
@@ -45,16 +48,7 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		json, err := json.Marshal(vo.Response{
-			Message: fmt.Sprintf("Created order with id: %d", orderID),
-		})
-		if err != nil {
-			jsonErrorRespond(w, err, http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(json)
-		w.WriteHeader(http.StatusCreated)
+		jsonMessageRespond(w, fmt.Sprintf("Successfully created Order with ID: %d", orderID), http.StatusCreated)
 		return
 	case http.MethodOptions:
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
