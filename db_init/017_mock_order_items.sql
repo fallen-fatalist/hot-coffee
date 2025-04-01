@@ -24,3 +24,30 @@ INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) V
 (3, 22, 2, 'With coconut milk'),
 (2, 23, 1, 'No sugar, extra honey'),
 (6, 24, 2, 'With extra soy milk');
+
+
+INSERT INTO order_items (menu_item_id, order_id, quantity, customization_info) VALUES
+(3, 25, 2, 'Extra foam'),
+(7, 26, 1, 'No sugar'),
+(12, 27, 3, 'With almond milk'),
+(1, 28, 1, 'With extra shot'),
+(5, 29, 2, 'No blueberries'),
+(9, 30, 3, 'Light foam'),
+(6, 31, 2, 'With skim milk'),
+(15, 32, 1, 'Extra hot'),
+(8, 33, 1, 'With extra shot'),
+(2, 34, 2, 'No sugar, extra butter'),
+(11, 35, 1, 'No foam'),
+(14, 36, 1, 'With oat milk'),
+(4, 37, 1, 'Hotter than usual'),
+(10, 38, 2, 'Extra cream'),
+(13, 39, 1, 'No nuts'),
+(1, 40, 2, 'Less foam'),
+(7, 41, 2, 'With extra vanilla'),
+(6, 42, 1, 'More blueberries'),
+(12, 43, 1, 'Extra hot'),
+(15, 44, 3, 'With extra sugar'),
+(5, 45, 1, 'No frosting'),
+(9, 46, 2, 'With coconut milk'),
+(2, 47, 1, 'No sugar, extra honey'),
+(4, 48, 2, 'With extra soy milk');
