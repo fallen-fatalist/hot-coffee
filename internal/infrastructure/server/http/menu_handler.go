@@ -6,7 +6,6 @@ import (
 
 	"hot-coffee/internal/core/entities"
 	"hot-coffee/internal/core/errors"
-	"hot-coffee/internal/infrastructure/storage/jsonrepository"
 	"hot-coffee/internal/service/serviceinstance"
 )
 
@@ -102,13 +101,14 @@ func HandleMenuItem(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
+		jsonMessageRespond(w, "Menu Item successfully updated", http.StatusOK)
 		return
 	case http.MethodDelete:
 		err := serviceinstance.MenuService.DeleteMenuItem(id)
 		if err != nil {
 			statusCode := http.StatusBadRequest
 			switch err {
-			case jsonrepository.ErrMenuItemDoesntExist:
+			case serviceinstance.ErrMenuItemNotExists:
 				statusCode = http.StatusNotFound
 			}
 			jsonErrorRespond(w, err, statusCode)

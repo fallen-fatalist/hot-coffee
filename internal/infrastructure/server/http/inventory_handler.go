@@ -108,6 +108,7 @@ func HandleInventoryItem(w http.ResponseWriter, r *http.Request) {
 			jsonErrorRespond(w, err, statusCode)
 			return
 		}
+		jsonMessageRespond(w, "Inventory Item successfully updated", http.StatusOK)
 		return
 	case http.MethodDelete:
 		err := serviceinstance.InventoryService.DeleteInventoryItem(id)
