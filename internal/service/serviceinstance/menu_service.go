@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -33,7 +34,10 @@ var (
 	ErrEmptyMenuItemDescription   = errors.New("menu item with empty description provided")
 	ErrNegativeMenuItemID         = errors.New("negative menu item id provided")
 	ErrNonNumericMenuItemID       = errors.New("non-numeric menu item id provided")
+	ErrTheSamePrice               = errors.New("the same price provided while updating menu item")
 )
+
+const eps = 0.000001
 
 // TODO: Loading Menu items into memory
 type menuService struct {
@@ -61,7 +65,7 @@ func (s *menuService) CreateMenuItem(item entities.MenuItem) error {
 		return err
 	}
 
-	if err := s.menuRepository.AddPriceDifference(id, int(item.Price)); err != nil {
+	if err := s.menuRepository.AddPriceDifference(id, item.Price); err != nil {
 		return err
 	}
 
@@ -104,24 +108,39 @@ func (s *menuService) UpdateMenuItem(idStr string, item entities.MenuItem) error
 		return ErrInventoryItemIDCollision
 	}
 
-	if err := s.menuRepository.Update(idStr, item); err != nil {
-		return err
-	}
-
 	menuItem, err := s.GetMenuItem(idStr)
 	if err != nil {
 		return err
 	}
+
+	if err := s.menuRepository.Update(idStr, item); err != nil {
+		return err
+	}
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return err
 	}
 
-	return s.menuRepository.AddPriceDifference(id, int(menuItem.Price)-int(item.Price))
+	if math.Abs(item.Price-menuItem.Price) < eps {
+		return nil
+	}
+
+	return s.menuRepository.AddPriceDifference(id, item.Price-menuItem.Price)
 }
 
 func (s *menuService) DeleteMenuItem(id string) error {
-	return s.menuRepository.Delete(id)
+	if err := isValidID(id); err != nil {
+		return err
+	}
+
+	if err := s.menuRepository.Delete(id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrMenuItemNotExists
+		}
+		return err
+	}
+	return nil
 }
 
 func validateMenuItem(item *entities.MenuItem) error {
