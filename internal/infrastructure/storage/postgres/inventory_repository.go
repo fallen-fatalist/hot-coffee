@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 
 	"hot-coffee/internal/core/errors"
@@ -227,8 +228,7 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 	query := `
 		SELECT name, quantity, price
 		FROM inventory
-		ORDER BY $1 ASC
-		LIMIT $3 OFFSET $2
+		LIMIT $2 OFFSET $1
 	`
 
 	// Calculate pagination details
@@ -237,20 +237,35 @@ func (r *inventoryRepository) GetPage(sortBy string, offset, rowCount int) (enti
 	page.PageSize = rowCount
 	page.HasNextPage = page.CurrentPage < page.TotalPages
 
-	rows, err := r.db.Query(query, sortBy, offset, rowCount)
+	rows, err := r.db.Query(query, offset, rowCount)
 	if err != nil {
 		return page, err
 	}
 	defer rows.Close()
 
-	// Iterate over the rows
+	// Store data in a temp slice
+	var items []entities.PageInventoryItem
 	for rows.Next() {
 		var item entities.PageInventoryItem
-		if err := rows.Scan(&item.Name, &item.Price, &item.Quantity); err != nil {
+		if err := rows.Scan(&item.Name, &item.Quantity, &item.Price); err != nil {
 			return page, err
 		}
-		page.Items = append(page.Items, item)
+		items = append(items, item)
 	}
+
+	// sorting
+	sort.Slice(items, func(i, j int) bool {
+		switch sortBy {
+		case "price":
+			return items[i].Price < items[j].Price
+		case "quantity":
+			return items[i].Quantity < items[j].Quantity
+		default:
+			return items[i].Name < items[j].Name
+		}
+	})
+
+	page.Items = items
 
 	return page, nil
 }
