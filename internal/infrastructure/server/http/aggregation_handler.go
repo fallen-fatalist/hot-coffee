@@ -97,7 +97,6 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 // Route: GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
 func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -110,7 +109,7 @@ func HandleNumberOfOrderedItems(w http.ResponseWriter, r *http.Request) {
 		items, err := serviceinstance.OrderService.GetOrderedMenuItemsCountByPeriod(startDate, endDate)
 		if err != nil {
 			statusCode := http.StatusInternalServerError
-			if errors.Is(err, serviceinstance.ErrEndDateEarlierThanStartDate) {
+			if errors.Is(err, serviceinstance.ErrEndDateEarlierThanStartDate) || errors.Is(err, serviceinstance.ErrInvalidDate) {
 				statusCode = http.StatusBadRequest
 			}
 			jsonErrorRespond(w, err, statusCode)

@@ -43,6 +43,7 @@ var (
 	ErrPeriodMonthInvalid = errors.New("incorrect period month provided")
 	// MenuItemsCountByPeriod
 	ErrEndDateEarlierThanStartDate = errors.New("end date is earlier than start date")
+	ErrInvalidDate                 = errors.New("Invalid date for 'endDate' or 'startDate'. Expected format: DD-MM-YYYY.")
 )
 
 type orderService struct {
@@ -558,13 +559,13 @@ func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDateStr, endDateStr
 	if startDateStr == "" {
 		endDate, err := time.Parse(dateLayout, endDateStr)
 		if err != nil {
-			return entities.OrderedMenuItemsCount{}, err
+			return entities.OrderedMenuItemsCount{}, ErrInvalidDate
 		}
 		return o.repository.GetOrderedMenuItemsCountByPeriod(time.Time{}, endDate)
 	} else if endDateStr == "" {
 		startDate, err := time.Parse(dateLayout, startDateStr)
 		if err != nil {
-			return entities.OrderedMenuItemsCount{}, err
+			return entities.OrderedMenuItemsCount{}, ErrInvalidDate
 		}
 		return o.repository.GetOrderedMenuItemsCountByPeriod(startDate, time.Time{})
 	}
@@ -572,12 +573,12 @@ func (o *orderService) GetOrderedMenuItemsCountByPeriod(startDateStr, endDateStr
 	//When both
 	startDate, err := time.Parse(dateLayout, startDateStr)
 	if err != nil {
-		return entities.OrderedMenuItemsCount{}, err
+		return entities.OrderedMenuItemsCount{}, ErrInvalidDate
 	}
 
 	endDate, err := time.Parse(dateLayout, endDateStr)
 	if err != nil {
-		return entities.OrderedMenuItemsCount{}, err
+		return entities.OrderedMenuItemsCount{}, ErrInvalidDate
 	}
 	if diff := endDate.Sub(startDate); diff < 0 {
 		return entities.OrderedMenuItemsCount{}, ErrEndDateEarlierThanStartDate
