@@ -41,6 +41,7 @@ var (
 	ErrPeriodDayInvalid   = errors.New("incorrect period day provided")
 	ErrPeriodTypeInvalid  = errors.New("incorrect period type provided")
 	ErrPeriodMonthInvalid = errors.New("incorrect period month provided")
+	ErrParameterInvalid   = errors.New("inappropriate optional parameter")
 	// MenuItemsCountByPeriod
 	ErrEndDateEarlierThanStartDate = errors.New("end date is earlier than start date")
 	ErrInvalidDate                 = errors.New("Invalid date for 'endDate' or 'startDate'. Expected format: DD-MM-YYYY.")
@@ -524,15 +525,19 @@ func (o *orderService) GetOrderedItemsByPeriod(period, month string, year int) (
 		return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
 	} else if period == "day" && month == "" {
 		return orderedItemsCountByPeriod, ErrPeriodDayInvalid
+	} else if year != 0 && month != "" {
+		return orderedItemsCountByPeriod, ErrParameterInvalid
 	}
 
 	if period == "day" && year == 0 {
 		year = time.Now().Year()
 	}
 
-	var ok bool
-	if month, ok = monthCapitalized[month]; !ok && month != "" {
-		return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
+	if month != "" {
+		var ok bool
+		if month, ok = monthCapitalized[month]; !ok {
+			return orderedItemsCountByPeriod, ErrPeriodMonthInvalid
+		}
 	}
 
 	itemsCount, err := o.repository.GetOrderedItemsCountByPeriod(period, month, year)

@@ -79,7 +79,15 @@ func HandleOrderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.OrderService.GetOrderedItemsByPeriod(period, month, year)
 		if err != nil {
-			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			statusCode := http.StatusInternalServerError
+			switch {
+			case errors.Is(err, serviceinstance.ErrPeriodDayInvalid),
+				errors.Is(err, serviceinstance.ErrPeriodTypeInvalid),
+				errors.Is(err, serviceinstance.ErrPeriodMonthInvalid),
+				errors.Is(err, serviceinstance.ErrParameterInvalid):
+				statusCode = http.StatusBadRequest
+			}
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 
