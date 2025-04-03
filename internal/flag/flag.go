@@ -39,8 +39,6 @@ func Parse(args []string) (err error) {
 			} else if Port < 1024 || Port > 65535 {
 				return fmt.Errorf("incorrect range port, port must me between 1024 and 65535")
 			}
-		case "dir":
-			StoragePath = flagValue
 		case "endpoints":
 			PrintEndPoints()
 			os.Exit(0)
@@ -95,6 +93,5 @@ func PrintEndPoints() {
 
     Aggregations:
         GET /reports/total-sales: Get the total sales amount.
-        GET /reports/popular-items: Get a list of popular menu items.
-`)
+        GET /reports/popular-items: Get a list of popular menu items.`)
 }
