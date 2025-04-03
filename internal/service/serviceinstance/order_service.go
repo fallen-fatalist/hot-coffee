@@ -74,6 +74,7 @@ func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 	}
 	order.CustomerID = customerID
 
+	// TODO: Divide deduction from repository layer, move it to service layer
 	orderID, err := s.repository.Create(order)
 	if err != nil {
 		if errors.Is(err, errors.ErrIDAlreadyExists) {
