@@ -154,7 +154,13 @@ func HandleInventoryLeftovers(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		items, err := serviceinstance.InventoryService.GetLeftovers(sortBy, page, pageSize)
 		if err != nil {
-			jsonErrorRespond(w, err, http.StatusInternalServerError)
+			statusCode := http.StatusInternalServerError
+			switch {
+			case errors.Is(err, serviceinstance.ErrInvalidSortValue),
+				errors.Is(err, serviceinstance.ErrNegativePage):
+				statusCode = http.StatusBadRequest
+			}
+			jsonErrorRespond(w, err, statusCode)
 			return
 		}
 
