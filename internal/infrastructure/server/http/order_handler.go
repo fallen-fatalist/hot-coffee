@@ -208,8 +208,10 @@ func HandleBatchOrders(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Request Body  Parsing \\
 		var req batchRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			jsonErrorRespond(w, errors.ErrIncorrectRequest, http.StatusBadRequest)
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields() // this will help detect unexpected fields
+		if err := decoder.Decode(&req); err != nil {
+			jsonErrorRespond(w, fmt.Errorf("invalid JSON provided: %w", err), http.StatusBadRequest)
 			return
 		}
 

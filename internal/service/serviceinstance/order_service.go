@@ -27,7 +27,6 @@ var (
 	ErrIncorrectOrderStatus        = errors.New("order status is incorrect")
 	ErrCreatedAtField              = errors.New("created at field is not empty")
 	ErrNoItemsInOrder              = errors.New("order has no items")
-	ErrProductIsNotExist           = errors.New("product provided in order does not exist in menu")
 	ErrClosedOrderCannotBeModified = errors.New("closed order cannot be modified")
 	ErrNotEnoughIgredient          = errors.New("not enough ingredients")
 	ErrNoOrders                    = errors.New("no orders in storage")
@@ -91,8 +90,6 @@ func (s *orderService) CreateOrder(order entities.Order) (int64, error) {
 }
 
 // TODO: Must be optimized in future, to reduce the number of database queries during the request execution
-// MUST DO: Add inventory updates to Batch response
-// Creates order concurrently
 func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, error) {
 	response := vo.BatchResponse{
 		OrderReports: nil,
@@ -101,7 +98,7 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 			Accepted:         0,
 			Rejected:         0,
 			TotalRevenue:     0,
-			InventoryUpdates: nil,
+			InventoryUpdates: []vo.InventoryUpdate{},
 		},
 	}
 	var wg sync.WaitGroup
@@ -126,6 +123,14 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 				var errInsufficientIngredient *errors.ErrInsufficientIngredient
 				if errors.As(err, &errInsufficientIngredient) {
 					orderReport.Reason = "insufficient inventory"
+				} else if errors.Is(err, ErrEmptyCustomerName) {
+					orderReport.Reason = "empty customer name"
+				} else if errors.Is(err, ErrMenuItemNotExists) {
+					orderReport.Reason = "non-existing menu item provided"
+				} else if errors.Is(err, ErrNegativeOrderItemQuantity) {
+					orderReport.Reason = "negative product quantity provided"
+				} else if errors.Is(err, ErrZeroOrderItemQuantity) {
+					orderReport.Reason = "zero product quantity provided"
 				} else {
 					orderReport.Reason = "failed to create order due to unhandled errors"
 				}
@@ -145,9 +150,9 @@ func (o *orderService) CreateOrders(orders []entities.Order) (vo.BatchResponse, 
 					orderReport.Total = orderRevenue
 					response.Summary.TotalRevenue += orderRevenue
 				}
+				orderReport.ID = orderID
+				orderIDs = append(orderIDs, orderID)
 			}
-			orderReport.ID = orderID
-			orderIDs = append(orderIDs, orderID)
 			orderReport.CustomerName = order.CustomerName
 			orderReports = append(orderReports, orderReport)
 		}(order)
@@ -337,7 +342,7 @@ func validateOrder(order *entities.Order) error {
 	// Products validation
 	for _, item := range order.Items {
 		if _, exists := menuItemsMap[item.ProductID]; !exists {
-			return ErrProductIsNotExist
+			return ErrMenuItemNotExists
 		} else if item.Quantity < 0 {
 			return ErrNegativeOrderItemQuantity
 		} else if item.Quantity == 0 {
