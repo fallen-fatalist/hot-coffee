@@ -1,0 +1,523 @@
+{
+	"info": {
+		"_postman_id": "0e0f1f6d-711d-47b4-bf90-f6a55b4aa65a",
+		"name": "frapuccino",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42461997",
+		"_collection_link": "https://mm-team-7208.postman.co/workspace/MM-team-Workspace~ae3faa17-74cd-4e91-a85a-8a1312d0fdcc/collection/42461997-0e0f1f6d-711d-47b4-bf90-f6a55b4aa65a?action=share&source=collection_link&creator=42461997"
+	},
+	"item": [
+		{
+			"name": "inventory",
+			"item": [
+				{
+					"name": "inventory_items_get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/inventory",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "inventory_item_post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"ingredient_id\": 20,\n        \"name\": \"Flour\",\n        \"price\": 2.5,\n        \"quantity\": 50,\n        \"unit\": \"kg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/inventory",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "inventory_item_get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/inventory/10",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "inventory_item_put",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"ingredient_id\": \"16\",\n        \"name\": \"Flour1\",\n        \"price\": 2.5,\n        \"quantity\": 50,\n        \"unit\": \"kg\"\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/inventory/16",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory",
+								"16"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "inventory_item_delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/inventory/0",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory",
+								"0"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "menu",
+			"item": [
+				{
+					"name": "menu_get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/menu",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"menu"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "menu_post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n        \"product_id\": \"101\",\n        \"name\": \"Espresso\",\n        \"description\": \"Strong black coffee made by forcing steam through finely ground coffee beans.\",\n        \"price\": 3,\n        \"ingredients\": [\n            {\n                \"ingredient_id\": \"1\",\n                \"quantity\": 18\n            }\n        ]\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/menu",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"menu"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "menu_item_get",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/menu/10",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"menu",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "menu_item_put",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": \"10\",\n    \"name\": \"Chocolate Chip Cookie\",\n    \"description\": \"A sweet and chewy cookie filled with chocolate chips.\",\n    \"price\": 2.5,\n    \"ingredients\": [\n        {\n            \"ingredient_id\": \"8\",\n            \"quantity\": 25\n        },\n        {\n            \"ingredient_id\": \"4\",\n            \"quantity\": 90\n        },\n        {\n            \"ingredient_id\": \"5\",\n            \"quantity\": 30\n        },\n        {\n            \"ingredient_id\": \"6\",\n            \"quantity\": 20\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/menu/10",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"menu",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "menu_item_delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/menu/10",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"menu",
+								"10"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "orders",
+			"item": [
+				{
+					"name": "orders_get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/orders",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "orders_post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n        \"order_id\": \"1\",\n        \"customer_name\": \"John Doe\",\n        \"items\": [\n            {\n                \"product_id\": 1,\n                \"quantity\": 2,\n                \"customization_info\": \"Less foam\"\n            }\n        ],\n        \"status\": \"open\",\n        \"created_at\": \"2023-04-22T08:40:35Z\"\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order_get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/orders/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order_put",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"order_id\": \"1\",\n        \"customer_name\": \"John Doe\",\n        \"items\": [\n            {\n                \"product_id\": 3,\n                \"quantity\": 1,\n                \"customization_info\": \"Extra foam\"\n            }\n        ],\n        \"status\": \"closed\",\n        \"created_at\": \"2024-01-05T10:20:30Z\"\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "aggregation",
+			"item": [
+				{
+					"name": "Number of ordered items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/orders/numberOfOrderedItems?startDate=01.01.2024&endDate=01.12.2024",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"numberOfOrderedItems"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "01.01.2024"
+								},
+								{
+									"key": "endDate",
+									"value": "01.12.2024"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Full Text Search Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/reports/search?q=coffee&filter=all&minPrice=3&maxPrice=12",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reports",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "coffee"
+								},
+								{
+									"key": "filter",
+									"value": "all"
+								},
+								{
+									"key": "minPrice",
+									"value": "3"
+								},
+								{
+									"key": "maxPrice",
+									"value": "12"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ordered Items By Period",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/reports/orderedItemsByPeriod?period=day&month=october&year=2024",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"reports",
+								"orderedItemsByPeriod"
+							],
+							"query": [
+								{
+									"key": "period",
+									"value": "day"
+								},
+								{
+									"key": "month",
+									"value": "october"
+								},
+								{
+									"key": "year",
+									"value": "2024"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get leftovers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/inventory/getLeftOvers?sortBy=mgj&page=-1&pageSize=f",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"inventory",
+								"getLeftOvers"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "mgj"
+								},
+								{
+									"key": "page",
+									"value": "-1"
+								},
+								{
+									"key": "pageSize",
+									"value": "f"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Order Processing",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"orders\": [\n       {\n           \"customer_name\": \"Alice\",\n           \"items\": [\n               {\n                   \"menu_item_id\": 3,\n                   \"quantity\": 2\n               },\n               {\n                   \"product_id\": 3,\n                   \"quantity\": 4\n               }\n           ]\n       },\n       {\n           \"customer_name\": \"Bob\",\n           \"items\": [\n               {\n                   \"product_id\": 2,\n                   \"quantity\": 2\n               }\n           ]\n       }\n   ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders/batch-process",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"batch-process"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
