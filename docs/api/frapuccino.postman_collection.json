@@ -496,7 +496,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n   \"orders\": [\n       {\n           \"customer_name\": \"Alice\",\n           \"items\": [\n               {\n                   \"menu_item_id\": 3,\n                   \"quantity\": 2\n               },\n               {\n                   \"product_id\": 3,\n                   \"quantity\": 4\n               }\n           ]\n       },\n       {\n           \"customer_name\": \"Bob\",\n           \"items\": [\n               {\n                   \"product_id\": 2,\n                   \"quantity\": 2\n               }\n           ]\n       }\n   ]\n}",
+							"raw": "{\n   \"orders\": [\n       {\n           \"customer_name\": \"Alice\",\n           \"items\": [\n               {\n                   \"product_id\": 1,\n                   \"quantity\": 2\n               },\n               {\n                   \"product_id\": 3,\n                   \"quantity\": 1\n               }\n           ]\n       },\n       {\n           \"customer_name\": \"Bob\",\n           \"items\": [\n               {\n                   \"product_id\": 2,\n                   \"quantity\": 1\n               }\n           ]\n       }\n   ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
