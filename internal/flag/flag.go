@@ -61,7 +61,6 @@ Usage:
 Options:
   --help       Show this screen.
   --port N     Port number.
-  --dir S      Path to the data directory.
   --endpoints  Show the api endpoints.
   `)
 }
@@ -76,6 +75,8 @@ func PrintEndPoints() {
         PUT /orders/{id}: Update an existing order.
         DELETE /orders/{id}: Delete an order.
         POST /orders/{id}/close: Close an order.
+		GET /orders/numberOfOrderedItems?startDate={startDate}&endDate={endDate}
+		POST /orders/batch-process
 
     Menu Items:
         POST /menu: Add a new menu item.
@@ -90,8 +91,11 @@ func PrintEndPoints() {
         GET /inventory/{id}: Retrieve a specific inventory item.
         PUT /inventory/{id}: Update an inventory item.
         DELETE /inventory/{id}: Delete an inventory item.
+		GET /inventory/getLeftOvers?sortBy={option}&page={page}&pageSize={pageSize}
 
     Aggregations:
         GET /reports/total-sales: Get the total sales amount.
-        GET /reports/popular-items: Get a list of popular menu items.`)
+        GET /reports/popular-items: Get a list of popular menu items.
+		GET /reports/search?q={query}&filter={option}&minPrice={minPrice}&maxPrice={maxPrice}'
+		GET /reports/orderedItemsByPeriod?period={day|month}&month={month}&year={year}`)
 }
